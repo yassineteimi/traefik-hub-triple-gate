@@ -1,0 +1,85 @@
+site_name: Traefik Hub — Triple Gate PoC
+
+nav:
+  - Overview: index.md
+  - Prerequisites: prerequisites.md
+  - Architecture: architecture.md
+  - The Three Gates:
+    - Gate 1 — API Gateway: gates/api-gateway.md
+    - Gate 2 — AI Gateway: gates/ai-gateway.md
+    - Gate 3 — MCP Gateway: gates/mcp-gateway.md
+  - Unified Demo: unified-demo.md
+  - Observability: observability.md
+  - Evaluation Notes: evaluation.md
+
+site_author: Yassine TEIMI
+site_description: >-
+  A homelab benchmark of Traefik Hub's "Triple Gate" — API Gateway, AI Gateway,
+  and MCP Gateway — for cloud-native API and AI governance. GitOps-first with
+  ArgoCD on a local Kubernetes cluster: declarative auth, rate limiting, LLM
+  content/safety guards, semantic caching, token quotas, and tool-level access
+  control (TBAC) for Model Context Protocol servers.
+
+repo_name: yassineteimi/traefik-hub-triple-gate
+repo_url: https://github.com/yassineteimi/traefik-hub-triple-gate
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+  palette:
+    - scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+      primary: teal
+      accent: lime
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+      primary: teal
+      accent: purple
+
+extra:
+  social:
+    - icon: fontawesome/brands/github-alt
+      link: https://github.com/yassineteimi
+    - icon: fontawesome/brands/linkedin
+      link: https://linkedin.com/in/yassine-teimi
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.mark
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+
+plugins:
+  - search
+
+copyright: |
+  &copy; 2026 <a href="https://github.com/yassineteimi" target="_blank" rel="noopener">Yassine TEIMI</a>
