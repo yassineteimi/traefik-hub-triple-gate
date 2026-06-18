@@ -19,6 +19,11 @@ spec:
         # Secret (key 'token') created by poc/scripts/load-secrets.sh. ---
         hub:
           token: traefik-hub-license
+          # Entitlement test: these require AI + MCP gateway on the license token.
+          aigateway:
+            enabled: true
+          mcpgateway:
+            enabled: true
         # Expose via NodePort so kind's extraPortMappings reach it on host 80/443.
         # (In chart v41 the type lives under service.spec.type, default LoadBalancer.)
         service:
