@@ -20,31 +20,29 @@ This page is verified **live** on the homelab — every check below shows the co
 
 !!! warning "Helm 4 vs Helm 3"
     Homebrew currently installs **Helm 4**. Traefik Hub's charts are validated against Helm 3. Helm 4 is largely backward-compatible; if a chart misbehaves, install Helm 3 alongside it:
-    ```bash
-    brew install helm@3
+    ```sh
+    $ brew install helm@3
     # then call it explicitly, e.g.
-    /opt/homebrew/opt/helm@3/bin/helm version --short
+    $ /opt/homebrew/opt/helm@3/bin/helm version --short
     ```
 
 ### Container runtime — Colima + kind
 
 We use **Colima** (free, open-source, Apple-Silicon-friendly) to provide a Docker-compatible daemon, and **kind** for the cluster. kind ships **no** ingress controller, so nothing competes with Traefik Hub — the cleanest base for this PoC. (If you prefer k3d, you must disable its bundled Traefik with `--k3s-arg "--disable=traefik@server:0"`.)
 
-```bash
-brew install colima docker kind helm argocd
-colima start --cpu 4 --memory 8 --disk 60
+```sh
+$ brew install colima docker kind helm argocd
+$ colima start --cpu 4 --memory 8 --disk 60
 ```
 
 Verify the daemon is reachable and Docker works end to end:
 
-```bash
-docker info --format 'Server {{.ServerVersion}} | {{.NCPU}} CPU | {{.MemTotal}} bytes RAM'
-docker run --rm hello-world
+```sh
+$ docker info --format 'Server {{.ServerVersion}} | {{.NCPU}} CPU | {{.MemTotal}} bytes RAM'
+$ docker run --rm hello-world
 ```
 
-**Healthy output:**
-
-```text
+```text title="Expected output"
 Server 29.5.2 | 4 CPU | 8307101696 bytes RAM
 ...
 Hello from Docker!
@@ -53,14 +51,14 @@ This message shows that your installation appears to be working correctly.
 
 ### kubectl, Helm, argocd, jq
 
-```bash
-kubectl version --client -o json | jq -r .clientVersion.gitVersion   # v1.31.2
-helm version --short                                                 # v4.2.2+...
-argocd version --client --short                                      # v3.4.3+...
-jq --version                                                         # jq-1.7.1
+```sh
+$ kubectl version --client -o json | jq -r .clientVersion.gitVersion   # v1.31.2
+$ helm version --short                                                 # v4.2.2+...
+$ argocd version --client --short                                      # v3.4.3+...
+$ jq --version                                                         # jq-1.7.1
 ```
 
-If `kubectl` or `jq` are missing: `brew install kubectl jq`.
+If `kubectl` or `jq` are missing: `$ brew install kubectl jq`.
 
 ## SaaS & external dependencies
 
@@ -75,21 +73,24 @@ All tokens go in a gitignored `.env` (copy from `.env.example`). The checks belo
 
 ### Verify the NVIDIA key (auth + inference)
 
-```bash
-set -a; . ./.env; set +a
+```sh
+$ set -a; . ./.env; set +a
 
 # 1) Auth: list models (expect HTTP 200)
-curl -s -o /dev/null -w '%{http_code}\n' \
-  "$NVIDIA_API_BASE/models" -H "Authorization: Bearer $NVIDIA_API_KEY"
+$ curl -s -o /dev/null -w '%{http_code}\n' \
+    "$NVIDIA_API_BASE/models" -H "Authorization: Bearer $NVIDIA_API_KEY"
 
 # 2) Inference entitlement: a real chat completion
-curl -s "$NVIDIA_API_BASE/chat/completions" \
-  -H "Authorization: Bearer $NVIDIA_API_KEY" -H "Content-Type: application/json" \
-  -d '{"model":"meta/llama-3.1-8b-instruct","messages":[{"role":"user","content":"Reply with exactly: GATE2_OK"}],"max_tokens":16,"temperature":0}' \
-  | jq -r .choices[0].message.content
+$ curl -s "$NVIDIA_API_BASE/chat/completions" \
+    -H "Authorization: Bearer $NVIDIA_API_KEY" -H "Content-Type: application/json" \
+    -d '{"model":"meta/llama-3.1-8b-instruct","messages":[{"role":"user","content":"Reply with exactly: GATE2_OK"}],"max_tokens":16,"temperature":0}' \
+    | jq -r .choices[0].message.content
 ```
 
-**Healthy output:** `200`, then `GATE2_OK`.
+```text title="Expected output"
+200
+GATE2_OK
+```
 
 ### Choosing the LLM Guard model (a real Phase A finding)
 
