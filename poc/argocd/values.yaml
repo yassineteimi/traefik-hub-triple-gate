@@ -1,0 +1,19 @@
+# ArgoCD Helm values for the Triple Gate homelab.
+# Pinned chart: argo/argo-cd 9.5.21 (appVersion v3.4.3).
+# Minimal install — we reach the UI/API via `kubectl port-forward`, so the
+# server runs in insecure mode (TLS terminates at the port-forward, not needed
+# inside this single-node homelab).
+global:
+  domain: argocd.triple-gate.local
+
+configs:
+  params:
+    server.insecure: true
+
+# Keep the footprint small for a laptop homelab.
+dex:
+  enabled: false
+notifications:
+  enabled: false
+applicationSet:
+  enabled: true
