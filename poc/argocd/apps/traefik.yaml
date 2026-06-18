@@ -1,0 +1,38 @@
+# Traefik — managed by ArgoCD (GitOps). Phase 1: pure OSS (no hub.token).
+# The OSS->Hub upgrade is performed by adding the `hub:` block in a later commit,
+# which ArgoCD reconciles automatically — the product's expansion motion as a diff.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://traefik.github.io/charts
+    chart: traefik
+    targetRevision: 41.0.0   # Traefik proxy v3.7.5
+    helm:
+      valuesObject:
+        # Expose via NodePort so kind's extraPortMappings reach it on host 80/443.
+        service:
+          type: NodePort
+        ports:
+          web:
+            nodePort: 30080
+          websecure:
+            nodePort: 30443
+        # Local dashboard/API IngressRoute (reachable via port-forward).
+        ingressRoute:
+          dashboard:
+            enabled: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

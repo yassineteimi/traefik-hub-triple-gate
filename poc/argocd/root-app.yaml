@@ -1,0 +1,26 @@
+# App-of-apps root. ArgoCD watches poc/argocd/apps/ in the repo and reconciles
+# every Application it finds there (Traefik now; the three gates later).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: triple-gate-root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/yassineteimi/traefik-hub-triple-gate.git
+    targetRevision: main
+    path: poc/argocd/apps
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
