@@ -64,15 +64,43 @@ If `kubectl` or `jq` are missing: `brew install kubectl jq`.
 
 ## SaaS & external dependencies
 
-!!! note "Status: next up"
-    Verified once tokens are provided. None require a GPU or a paid plan to start.
+All tokens go in a gitignored `.env` (copy from `.env.example`). The checks below read from that file and **never print the secret** — they assert behaviour, not values.
 
-| Dependency | Purpose | How to verify | Status |
-| --- | --- | --- | --- |
-| **Traefik Hub trial token** | Register the gateway to the cluster (`helm upgrade`); must include **AI + MCP** entitlements | Connect the gateway, then test `hub.aigateway.enabled=true` | ⏳ |
-| **NVIDIA hosted NIM** (`nvapi-` key) | LLM traffic **and** the safety guard — OpenAI-compatible, no GPU | `curl https://integrate.api.nvidia.com/v1/models` with the key | ⏳ |
-| **Second LLM provider** (optional) | Failover demo | OpenAI key, or local Ollama at `:11434` | ⏳ |
-| **MCP server** (`mcp-ecommerce-agent`) | Workload behind Gate 3 | Image/repo reachable | ⏳ |
+| Dependency | Purpose | Status |
+| --- | --- | --- |
+| **Traefik Hub trial token** | Register the gateway to the cluster (`helm upgrade`); needs **AI + MCP** entitlements | ✅ present · entitlement confirmed at gateway connect (M0) |
+| **NVIDIA hosted NIM** (`nvapi-` key) | LLM traffic **and** the safety guard — OpenAI-compatible, no GPU | ✅ verified (auth + inference) |
+| **Second LLM provider** (optional) | Failover demo | ⏳ deferred to M2 |
+| **MCP server** (`mcp-ecommerce-agent`) | Workload behind Gate 3 | ✅ located locally |
+
+### Verify the NVIDIA key (auth + inference)
+
+```bash
+set -a; . ./.env; set +a
+
+# 1) Auth: list models (expect HTTP 200)
+curl -s -o /dev/null -w '%{http_code}\n' \
+  "$NVIDIA_API_BASE/models" -H "Authorization: Bearer $NVIDIA_API_KEY"
+
+# 2) Inference entitlement: a real chat completion
+curl -s "$NVIDIA_API_BASE/chat/completions" \
+  -H "Authorization: Bearer $NVIDIA_API_KEY" -H "Content-Type: application/json" \
+  -d '{"model":"meta/llama-3.1-8b-instruct","messages":[{"role":"user","content":"Reply with exactly: GATE2_OK"}],"max_tokens":16,"temperature":0}' \
+  | jq -r .choices[0].message.content
+```
+
+**Healthy output:** `200`, then `GATE2_OK`.
+
+### Choosing the LLM Guard model (a real Phase A finding)
+
+Traefik Hub's [LLM Guard](https://doc.traefik.io/traefik-hub/ai-gateway/middlewares/llm-guard) blocks on a text condition over the guard model's reply (e.g. `Contains("unsafe")`), so the guard must return a **parseable verdict**. We tested two NVIDIA safety models against the same prompts:
+
+| Model | Reply to a harmful prompt | Fits `Contains("unsafe")`? |
+| --- | --- | --- |
+| `nvidia/nemotron-content-safety-reasoning-4b` | Prose refusal ("I cannot and will not…") | ❌ no verdict token → false negative |
+| `nvidia/llama-3.1-nemoguard-8b-content-safety` | `{"User Safety": "unsafe", "Safety Categories": "…"}` | ✅ deterministic |
+
+**Decision:** use **`nvidia/llama-3.1-nemoguard-8b-content-safety`** for the guard — the same model in Traefik's [official NVIDIA NIMs guide](https://doc.traefik.io/traefik-hub/ai-gateway/guides/nvidia-nims-integration). The reasoning model is a *safety-aware chat model*, not a classifier. Recorded in `.env` as `NVIDIA_GUARD_MODEL`.
 
 !!! tip "Secrets hygiene"
-    All tokens go in a gitignored `.env` (copy from `.env.example`) and are injected as Kubernetes Secrets by scripts in `poc/scripts/`. Nothing secret is ever committed, and this published site contains zero secrets.
+    Tokens are injected as Kubernetes Secrets by scripts in `poc/scripts/`. Nothing secret is committed, and this published site contains zero secrets.
