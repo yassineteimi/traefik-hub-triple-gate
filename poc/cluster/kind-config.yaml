@@ -1,0 +1,21 @@
+# kind cluster for the Traefik Hub Triple Gate PoC.
+# Single control-plane node. Host ports 80/443/8000 are mapped to NodePorts so
+# Traefik (installed as a NodePort Service) is reachable from the host browser/curl.
+#   - 80  -> web         (HTTP entrypoint)
+#   - 443 -> websecure   (HTTPS entrypoint)
+#   - 8000-> traefik     (dashboard / API, optional)
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: triple-gate
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080   # Traefik web NodePort
+        hostPort: 80
+        protocol: TCP
+      - containerPort: 30443   # Traefik websecure NodePort
+        hostPort: 443
+        protocol: TCP
+      - containerPort: 30800   # Traefik dashboard/API NodePort
+        hostPort: 8000
+        protocol: TCP
