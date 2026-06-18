@@ -1,0 +1,23 @@
+# Gate 1 (API Gateway) — ArgoCD reconciles the sample API + JWT + rate limit
+# from poc/gate1-api/ in the repo. The signing Secret is injected out-of-band by
+# load-secrets.sh (never in Git), so it is not a tracked resource here.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gate1-api
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/yassineteimi/traefik-hub-triple-gate.git
+    targetRevision: main
+    path: poc/gate1-api
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

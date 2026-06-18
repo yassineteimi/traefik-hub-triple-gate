@@ -23,6 +23,7 @@ require() { # require VARNAME
 }
 require TRAEFIK_HUB_TOKEN
 require NVIDIA_API_KEY
+require JWT_SIGNING_SECRET
 
 ns() { kubectl --context "${CTX}" get ns "$1" >/dev/null 2>&1 || kubectl --context "${CTX}" create ns "$1"; }
 ns traefik
@@ -39,3 +40,10 @@ kubectl --context "${CTX}" -n apps create secret generic nvidia-nim \
   --from-literal=apiKey="${NVIDIA_API_KEY}" \
   --dry-run=client -o yaml | kubectl --context "${CTX}" apply -f - >/dev/null
 echo "✅ secret apps/nvidia-nim set"
+
+# Gate 1: HS256 signing secret for the JWT middleware (key 'signingSecret',
+# referenced as urn:k8s:secret:jwt:signingSecret).
+kubectl --context "${CTX}" -n apps create secret generic jwt \
+  --from-literal=signingSecret="${JWT_SIGNING_SECRET}" \
+  --dry-run=client -o yaml | kubectl --context "${CTX}" apply -f - >/dev/null
+echo "✅ secret apps/jwt set"
