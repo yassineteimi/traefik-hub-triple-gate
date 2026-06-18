@@ -51,6 +51,9 @@ theme:
       primary: teal
       accent: purple
 
+extra_css:
+  - stylesheets/terminal.css
+
 extra:
   social:
     - icon: fontawesome/brands/github-alt

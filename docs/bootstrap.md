@@ -14,7 +14,7 @@ flowchart LR
 
 A single-node **kind** cluster, with host ports 80/443/8000 mapped to NodePorts so Traefik is reachable from the browser. Creation is idempotent.
 
-```sh
+```{ .sh .terminal }
 $ ./poc/scripts/00-bootstrap-cluster.sh
 ```
 
@@ -26,7 +26,7 @@ triple-gate-control-plane   Ready    control-plane   28s   v1.36.1
 
 Inject the Hub + NVIDIA tokens from the gitignored `.env` as Kubernetes Secrets (nothing is printed or committed):
 
-```sh
+```{ .sh .terminal }
 $ ./poc/scripts/load-secrets.sh
 ```
 
@@ -39,13 +39,13 @@ $ ./poc/scripts/load-secrets.sh
 
 Installed via the pinned Helm chart `argo/argo-cd` **9.5.21** (ArgoCD v3.4.3), in insecure mode for local port-forward access.
 
-```sh
+```{ .sh .terminal }
 $ ./poc/scripts/01-install-argocd.sh
 ```
 
 Open the UI (prints the admin password, then port-forwards to `http://localhost:8080`, user `admin`):
 
-```sh
+```{ .sh .terminal }
 $ ./poc/scripts/argocd-ui.sh
 ```
 
@@ -53,7 +53,7 @@ $ ./poc/scripts/argocd-ui.sh
 
 You chose **app-of-apps**, so a root Application watches `poc/argocd/apps/` and reconciles everything it finds there.
 
-```sh
+```{ .sh .terminal }
 $ kubectl apply -f poc/argocd/root-app.yaml
 ```
 
@@ -67,7 +67,7 @@ triple-gate-root   Synced        Healthy
 
 The first `traefik` Application installs the **OSS** Traefik chart (`traefik/traefik` **41.0.0**, proxy v3.7.5) with **no** `hub.token`. It comes up as a plain ingress controller:
 
-```sh
+```{ .sh .terminal }
 $ kubectl -n traefik get pods
 $ curl -s -o /dev/null -w '%{http_code}\n' http://localhost:80/
 ```
@@ -99,7 +99,7 @@ helm:
 
 Commit it, and ArgoCD reconciles the upgrade — Traefik redeploys as a **Hub gateway** and registers with Traefik Hub:
 
-```sh
+```{ .sh .terminal }
 $ git commit -am "OSS->Hub upgrade — add hub.token" && git push
 $ kubectl -n traefik logs deploy/traefik | grep -i hub
 ```
@@ -114,7 +114,7 @@ The lease acquisition (and the absence of any token/entitlement error) confirms 
 
 Enabling `hub.aigateway` and `hub.mcpgateway` with the gateway staying **healthy, 0 restarts, no rejection** confirms the trial token carries **AI + MCP** entitlements. The Hub CRDs appear, including `aiservices.hub.traefik.io` (Gate 2) and `accesscontrolpolicies.hub.traefik.io` (Gate 3 TBAC).
 
-```sh
+```{ .sh .terminal }
 $ kubectl get crd | grep hub.traefik.io
 ```
 
