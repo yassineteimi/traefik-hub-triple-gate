@@ -4,6 +4,7 @@ nav:
   - Overview: index.md
   - Prerequisites: prerequisites.md
   - Architecture: architecture.md
+  - Bootstrap (M0): bootstrap.md
   - The Three Gates:
     - Gate 1 — API Gateway: gates/api-gateway.md
     - Gate 2 — AI Gateway: gates/ai-gateway.md
