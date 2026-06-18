@@ -14,6 +14,11 @@ spec:
     targetRevision: 41.0.0   # Traefik proxy v3.7.5
     helm:
       valuesObject:
+        # --- OSS -> Hub upgrade: providing hub.token registers this gateway with
+        # Traefik Hub and enables the API Gateway. The value is the *name* of the
+        # Secret (key 'token') created by poc/scripts/load-secrets.sh. ---
+        hub:
+          token: traefik-hub-license
         # Expose via NodePort so kind's extraPortMappings reach it on host 80/443.
         # (In chart v41 the type lives under service.spec.type, default LoadBalancer.)
         service:
