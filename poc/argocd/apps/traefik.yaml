@@ -15,8 +15,10 @@ spec:
     helm:
       valuesObject:
         # Expose via NodePort so kind's extraPortMappings reach it on host 80/443.
+        # (In chart v41 the type lives under service.spec.type, default LoadBalancer.)
         service:
-          type: NodePort
+          spec:
+            type: NodePort
         ports:
           web:
             nodePort: 30080
