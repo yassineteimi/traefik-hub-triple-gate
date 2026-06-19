@@ -1,0 +1,13 @@
+# Upstream LLM provider: NVIDIA hosted NIM (OpenAI-compatible). An ExternalName
+# Service lets Traefik route to the SaaS endpoint as if it were an in-cluster svc.
+apiVersion: v1
+kind: Service
+metadata:
+  name: nvidia-external
+  namespace: apps
+spec:
+  type: ExternalName
+  externalName: integrate.api.nvidia.com
+  ports:
+    - port: 443
+      targetPort: 443

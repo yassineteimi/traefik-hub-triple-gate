@@ -1,0 +1,19 @@
+# Turns the route into an AI endpoint. The gateway injects the provider API key
+# (from Secret apps/nvidia-nim, key apiKey) and pins the model — clients never
+# see the key, and cannot override the model (governance).
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: chatcompletion-nvidia
+  namespace: apps
+spec:
+  plugin:
+    chat-completion:
+      token: urn:k8s:secret:nvidia-nim:apiKey
+      model: meta/llama-3.1-8b-instruct
+      allowModelOverride: false
+      allowParamsOverride: true
+      params:
+        temperature: 0.2
+        topP: 1
+        maxTokens: 512

@@ -1,0 +1,21 @@
+# Gate 2 (AI Gateway) — ArgoCD reconciles the AI route + guards from poc/gate2-ai/.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gate2-ai
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/yassineteimi/traefik-hub-triple-gate.git
+    targetRevision: main
+    path: poc/gate2-ai
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

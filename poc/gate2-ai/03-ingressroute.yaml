@@ -1,0 +1,21 @@
+# AI route: ai.localhost/v1/chat/completions -> NVIDIA NIM, via the
+# chat-completion middleware. passHostHeader:false so the upstream sees its own
+# host (required for TLS SNI to integrate.api.nvidia.com).
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ai-gateway
+  namespace: apps
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`ai.localhost`) && Path(`/v1/chat/completions`)
+      kind: Rule
+      middlewares:
+        - name: chatcompletion-nvidia
+      services:
+        - name: nvidia-external
+          port: 443
+          scheme: https
+          passHostHeader: false
