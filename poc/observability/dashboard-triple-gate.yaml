@@ -1,0 +1,71 @@
+# Grafana dashboard for the Triple Gate, auto-loaded by the Grafana sidecar
+# (label grafana_dashboard=1). Focuses on request flow and "blocked by gate".
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-triple-gate
+  namespace: observability
+  labels:
+    grafana_dashboard: "1"
+data:
+  triple-gate.json: |
+    {
+      "uid": "triple-gate",
+      "title": "Traefik Triple Gate",
+      "tags": ["traefik", "triple-gate"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "10s",
+      "time": { "from": "now-30m", "to": "now" },
+      "panels": [
+        {
+          "id": 1, "type": "timeseries", "title": "Request rate by route (req/s)",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [ {
+            "expr": "sum by (router) (rate(traefik_router_requests_total[1m]))",
+            "legendFormat": "{{router}}", "refId": "A"
+          } ]
+        },
+        {
+          "id": 2, "type": "timeseries", "title": "Blocked by gate (401 / 403) by route",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [ {
+            "expr": "sum by (router, code) (rate(traefik_router_requests_total{code=~\"401|403\"}[1m]))",
+            "legendFormat": "{{router}} {{code}}", "refId": "A"
+          } ]
+        },
+        {
+          "id": 3, "type": "stat", "title": "Total blocked (401+403, last 1h)",
+          "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [ {
+            "expr": "sum(increase(traefik_router_requests_total{code=~\"401|403\"}[1h]))",
+            "refId": "A"
+          } ],
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" },
+            "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 1 } ] } } }
+        },
+        {
+          "id": 4, "type": "stat", "title": "Allowed (2xx, last 1h)",
+          "gridPos": { "h": 8, "w": 6, "x": 6, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [ {
+            "expr": "sum(increase(traefik_router_requests_total{code=~\"2..\"}[1h]))",
+            "refId": "A"
+          } ],
+          "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } } }
+        },
+        {
+          "id": 5, "type": "timeseries", "title": "p95 latency by route (s)",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [ {
+            "expr": "histogram_quantile(0.95, sum by (le, router) (rate(traefik_router_request_duration_seconds_bucket[5m])))",
+            "legendFormat": "{{router}}", "refId": "A"
+          } ]
+        }
+      ]
+    }
