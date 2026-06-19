@@ -127,5 +127,5 @@ Paris.
 403
 ```
 
-!!! info "Still to come in Gate 2"
-    **Semantic cache** (serve repeated questions without an LLM call), **token rate-limit / quota** (cost governance), and **automatic provider failover** to a second LLM. These are the next increment.
+!!! info "Deferred to v2"
+    **Semantic cache** (serve repeated questions without an LLM call), **token rate-limit / quota** (cost governance), and **automatic provider failover** to a second LLM are planned for a v2 iteration — v1 ships the routing + both guards above. See the project backlog.
