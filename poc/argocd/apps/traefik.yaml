@@ -50,10 +50,11 @@ spec:
             addEntryPointsLabels: true
             addRoutersLabels: true
             addServicesLabels: true
-        podAnnotations:
-          prometheus.io/scrape: "true"
-          prometheus.io/port: "9100"
-          prometheus.io/path: /metrics
+        deployment:
+          podAnnotations:
+            prometheus.io/scrape: "true"
+            prometheus.io/port: "9100"
+            prometheus.io/path: /metrics
   destination:
     server: https://kubernetes.default.svc
     namespace: traefik
