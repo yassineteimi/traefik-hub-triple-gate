@@ -75,9 +75,60 @@ apps-ecommerce-mcp-…    403   6    # Gate 3: TBAC tool denials
 !!! warning "Empty result? Check the port-forward"
     `curl http://localhost:9090/...` returning nothing almost always means **no port-forward is running** (connection refused) — Prometheus isn't exposed on the host by default. Run `prometheus-ui.sh` first. The same applies to Grafana (`grafana-ui.sh`, `:3000`).
 
-!!! info "Next increment (M5.2)"
-    An **OpenTelemetry Collector** to surface `gen_ai.client.token.usage` (AI token
-    counts/cost) and `mcp.client.operation.duration` (tool-call decisions by
-    `mcp.tool.name`), with Grafana panels — plus captured **screenshots** and a
-    written findings section on what Traefik's observability does well and where it
-    falls short.
+## AI & MCP metrics via OpenTelemetry
+
+Traefik exposes request metrics on the Prometheus endpoint, but the **AI- and
+MCP-specific** metrics are emitted over **OTLP** only. An OpenTelemetry Collector
+receives them and re-exposes them to Prometheus. What arrives is richer than
+expected — it follows the OpenTelemetry **GenAI semantic conventions**:
+
+| Metric (Prometheus name) | What it gives us |
+| --- | --- |
+| `gen_ai_client_token_usage_sum` | Input/output **token counts** by model — drives a **cost** estimate |
+| `gen_ai_client_operation_duration_seconds` | LLM call latency |
+| `traefik_hub_llm_guard_requests_total{reason}` | **LLM Guard blocks by reason** (e.g. `unsafe_content`) |
+| `mcp_client_operation_duration_seconds_count{mcp_method_name,error_type}` | **MCP tool-call decisions** (allow vs `error_type="403"`) |
+
+Observed live after traffic:
+
+```text title="Observed"
+AI tokens         input = 942   output = 167
+Est. AI cost      ≈ $0.0002  (@ $0.20 / 1M tokens)
+LLM Guard blocks  reason="unsafe_content" = 3
+```
+
+The Grafana dashboard adds panels for token usage, estimated cost, LLM Guard
+blocks by reason, and MCP operations by method/decision.
+
+## Findings (honest assessment)
+
+**Strong:**
+
+- **Standards-first.** AI metrics use the OTel **GenAI semantic conventions**
+  (`gen_ai.token.type`, `gen_ai.request.model`, …), so token usage and cost are
+  vendor-neutral and portable — not a proprietary shape.
+- **Governance-grade signals out of the box.** Token usage → cost, **guard blocks
+  by reason**, and per-tool MCP decisions are exactly what a regulated buyer needs
+  for AI cost control and audit.
+- Request metrics carry per-route labels, so each gate's blocks (401/403) are
+  directly visible without custom instrumentation.
+
+**Rough edges (worth flagging):**
+
+- The AI/MCP metrics are **OTLP-only** — you *must* run a collector to get them
+  into Prometheus; they aren't on Traefik's Prometheus endpoint. Expect that extra
+  hop.
+- **Content Guard** has no obvious dedicated counter like LLM Guard's
+  `..._requests_total{reason}`; its blocks are only visible as `403` on the route.
+- On a denied MCP `tools/call`, `mcp_tool_name` isn't always populated (the request
+  is rejected before tool resolution), so deny-by-tool charts lean on `error_type`
+  + the route's `403`.
+- Operational gotchas (documented inline): `deployment.podAnnotations` (not root),
+  the collector needs a restart to pick up config, and querying the in-pod
+  exporter directly can mislead — **query Prometheus**, not the collector's
+  `:8889`, to confirm delivery.
+
+!!! info "Screenshots"
+    Capture the **Traefik Triple Gate** dashboard (via `grafana-ui.sh`) after a
+    `unified-demo.sh` run and drop the images in `docs/assets/screenshots/` — the
+    blocked-by-gate, token-usage, and guard-blocks panels tell the story at a glance.
