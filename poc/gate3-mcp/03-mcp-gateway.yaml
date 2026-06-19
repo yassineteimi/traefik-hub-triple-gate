@@ -22,8 +22,20 @@ spec:
           - https://mcp.localhost/oauth/authorize
         resourceDocumentation: https://yassineteimi.github.io/mcp-ecommerce-agent/
       policies:
-        - match: NotEquals(`mcp.method`, `tools/call`)
+        # MCP protocol handshake + discovery — allowed for any authenticated caller.
+        - match: Equals(`mcp.method`, `initialize`)
           action: allow
+        - match: Equals(`mcp.method`, `notifications/initialized`)
+          action: allow
+        - match: Equals(`mcp.method`, `ping`)
+          action: allow
+        - match: Equals(`mcp.method`, `tools/list`)
+          action: allow
+        - match: Equals(`mcp.method`, `resources/list`)
+          action: allow
+        - match: Equals(`mcp.method`, `prompts/list`)
+          action: allow
+        # Tool calls — allowed only if the tool is in the caller's JWT allowed_tools.
         - match: Equals(`mcp.method`, `tools/call`) && Contains(`jwt.allowed_tools`, `${mcp.params.name}`)
           action: allow
       defaultAction: deny
