@@ -187,7 +187,22 @@ blocks by reason, and MCP operations by method/decision.
   exporter directly can mislead — **query Prometheus**, not the collector's
   `:8889`, to confirm delivery.
 
-!!! info "Screenshots"
-    Capture the **Traefik Triple Gate** dashboard (via `grafana-ui.sh`) after a
-    `unified-demo.sh` run and drop the images in `docs/assets/screenshots/` — the
-    blocked-by-gate, token-usage, and guard-blocks panels tell the story at a glance.
+## The dashboard
+
+Captured after sustained traffic through all three gates.
+
+**Request flow & gate enforcement** — request rate per route, blocked-by-gate
+(401/403), allowed vs blocked, and p95 latency:
+
+![Triple Gate dashboard — request flow and gate enforcement](assets/screenshots/triple-gate-overview.png)
+
+**AI & agent governance** — token usage (input/output), estimated cost, LLM Guard
+blocks by reason, and MCP operations / tool-call decisions:
+
+![Triple Gate dashboard — AI token usage, cost, guard blocks, MCP decisions](assets/screenshots/triple-gate-ai-mcp.png)
+
+!!! tip "Reproduce the screenshots"
+    `./poc/scripts/grafana-ui.sh`, then in another terminal run traffic for a minute
+    (`./poc/scripts/unified-demo.sh` a few times, or a `curl` loop), and the panels
+    fill in. The `rate()` panels use a **5-minute** window because Prometheus scrapes
+    every ~60s — a `[1m]` window only catches one sample and reads "No data".
