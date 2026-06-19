@@ -17,9 +17,9 @@ spec:
   plugin:
     mcp:
       resourceMetadata:
-        resource: http://mcp.localhost/ecommerce-mcp
+        resource: https://mcp.localhost/ecommerce-mcp
         authorizationServers:
-          - http://mcp.localhost/oauth/authorize
+          - https://mcp.localhost/oauth/authorize
         resourceDocumentation: https://yassineteimi.github.io/mcp-ecommerce-agent/
       policies:
         - match: NotEquals(`mcp.method`, `tools/call`)
