@@ -38,6 +38,11 @@ spec:
         ingressRoute:
           dashboard:
             enabled: true
+        # Allow ExternalName Services (Gate 2 routes to the NVIDIA NIM SaaS
+        # endpoint via an ExternalName service; disabled by default for safety).
+        providers:
+          kubernetesCRD:
+            allowExternalNameServices: true
   destination:
     server: https://kubernetes.default.svc
     namespace: traefik
