@@ -43,6 +43,17 @@ spec:
         providers:
           kubernetesCRD:
             allowExternalNameServices: true
+        # Observability (M5): per-router/service Prometheus labels so we can see
+        # guard hits (403) per route; scrape annotations for Prometheus discovery.
+        metrics:
+          prometheus:
+            addEntryPointsLabels: true
+            addRoutersLabels: true
+            addServicesLabels: true
+        podAnnotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "9100"
+          prometheus.io/path: /metrics
   destination:
     server: https://kubernetes.default.svc
     namespace: traefik

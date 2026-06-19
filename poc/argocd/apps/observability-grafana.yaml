@@ -1,0 +1,46 @@
+# Grafana with a provisioned Prometheus datasource. Dashboards are added as
+# ConfigMaps (picked up by the sidecar) in M5.2 so we can tailor them to our
+# Traefik/Hub metric names.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability-grafana
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: grafana
+    targetRevision: 10.5.15   # Grafana 12.3.1
+    helm:
+      valuesObject:
+        fullnameOverride: grafana
+        adminUser: admin
+        adminPassword: admin          # homelab only; reached via port-forward
+        persistence: { enabled: false }
+        resources:
+          requests: { cpu: 50m, memory: 128Mi }
+          limits: { cpu: 300m, memory: 256Mi }
+        datasources:
+          datasources.yaml:
+            apiVersion: 1
+            datasources:
+              - name: Prometheus
+                type: prometheus
+                uid: prometheus
+                url: http://prometheus-server.observability.svc.cluster.local
+                access: proxy
+                isDefault: true
+        sidecar:
+          dashboards:
+            enabled: true
+            label: grafana_dashboard
+            labelValue: "1"
+            searchNamespace: observability
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions:
+      - CreateNamespace=true
