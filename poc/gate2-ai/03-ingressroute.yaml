@@ -14,7 +14,8 @@ spec:
       kind: Rule
       middlewares:
         - name: content-guard-pii        # 1. deterministic regex PII block
-        - name: chatcompletion-nvidia     # 2. forward to NVIDIA NIM
+        - name: llm-guard-safety          # 2. semantic safety (nemoguard verdict)
+        - name: chatcompletion-nvidia     # 3. forward to NVIDIA NIM
       services:
         - name: nvidia-external
           port: 443

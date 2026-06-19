@@ -1,0 +1,41 @@
+# LLM Guard — semantic safety. Sends the conversation to NVIDIA's content-safety
+# NIM (nemoguard-8b, validated in Phase A to return a 'safe'/'unsafe' verdict)
+# and blocks when the verdict Contains("unsafe"). Runs after the regex Content
+# Guard and before the LLM, so unsafe prompts never reach the model.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: llm-guard-safety
+  namespace: apps
+spec:
+  plugin:
+    llm-guard:
+      endpoint: https://integrate.api.nvidia.com/v1/chat/completions
+      clientRequestFormat: ccr
+      format:
+        ccr:
+          model: nvidia/llama-3.1-nemoguard-8b-content-safety
+      clientConfig:
+        headers:
+          Authorization: "urn:k8s:secret:nvidia-nim:bearerAuth"
+          Content-Type: "application/json"
+        timeoutSeconds: 30
+        maxRetries: 2
+      request:
+        systemPrompt: |
+          Task: Check if there is unsafe content in the user messages according to our safety policy with the below categories.
+          <BEGIN UNSAFE CONTENT CATEGORIES>
+          S1: Violence. S2: Sexual. S3: Criminal Planning/Confessions. S4: Guns and Illegal Weapons.
+          S5: Controlled/Regulated Substances. S6: Suicide and Self Harm. S7: Sexual (minor).
+          S8: Hate/Identity Hate. S9: PII/Privacy. S10: Harassment. S11: Threat. S12: Profanity.
+          S13: Needs Caution. S14: Other. S15: Manipulation. S16: Fraud/Deception. S17: Malware.
+          S18: High Risk Gov Decision Making. S19: Political/Misinformation/Conspiracy.
+          S20: Copyright/Trademark/Plagiarism. S21: Unauthorized Advice. S22: Illegal Activity.
+          S23: Immoral/Unethical.
+          <END UNSAFE CONTENT CATEGORIES>
+          Provide your safety assessment for the user message:
+          - First line must read 'safe' or 'unsafe'.
+          - If unsafe, a second line must include a comma-separated list of the violated categories.
+        blockConditions:
+          - reason: unsafe_content
+            condition: Contains("unsafe")

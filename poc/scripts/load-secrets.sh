@@ -36,8 +36,11 @@ kubectl --context "${CTX}" -n traefik create secret generic traefik-hub-license 
   --dry-run=client -o yaml | kubectl --context "${CTX}" apply -f - >/dev/null
 echo "✅ secret traefik/traefik-hub-license set"
 
+# apiKey      : raw key for the chat-completion middleware (adds Bearer itself)
+# bearerAuth  : full "Bearer <key>" value for the LLM Guard clientConfig.headers
 kubectl --context "${CTX}" -n apps create secret generic nvidia-nim \
   --from-literal=apiKey="${NVIDIA_API_KEY}" \
+  --from-literal=bearerAuth="Bearer ${NVIDIA_API_KEY}" \
   --dry-run=client -o yaml | kubectl --context "${CTX}" apply -f - >/dev/null
 echo "✅ secret apps/nvidia-nim set"
 
