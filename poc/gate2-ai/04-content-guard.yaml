@@ -1,0 +1,30 @@
+# Content Guard — deterministic, regex-based PII/keyword blocking. Runs BEFORE
+# the chat-completion middleware, so a blocked prompt never reaches the LLM.
+# No external service (regex engine). clientRequestFormat:ccr auto-detects the
+# OpenAI chat message fields.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: content-guard-pii
+  namespace: apps
+spec:
+  plugin:
+    content-guard:
+      clientRequestFormat: ccr
+      engine:
+        regex: {}
+      request:
+        rules:
+          # Credit-card-like number (4 groups of 4 digits)
+          - entities:
+              - '\d{4}[ -]?\d{4}[ -]?\d{4}[ -]?\d{4}'
+            block: true
+            reason: pii_credit_card
+          # US SSN-like number
+          - entities:
+              - '\d{3}-\d{2}-\d{4}'
+            block: true
+            reason: pii_ssn
+        onDenyResponse:
+          statusCode: 403
+          message: "Blocked by Content Guard: sensitive data (PII) detected in prompt."

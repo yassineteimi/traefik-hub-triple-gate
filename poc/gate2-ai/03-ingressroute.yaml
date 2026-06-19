@@ -13,7 +13,8 @@ spec:
     - match: Host(`ai.localhost`) && Path(`/v1/chat/completions`)
       kind: Rule
       middlewares:
-        - name: chatcompletion-nvidia
+        - name: content-guard-pii        # 1. deterministic regex PII block
+        - name: chatcompletion-nvidia     # 2. forward to NVIDIA NIM
       services:
         - name: nvidia-external
           port: 443
