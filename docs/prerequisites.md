@@ -52,7 +52,7 @@ This message shows that your installation appears to be working correctly.
 ### kubectl, Helm, argocd, jq
 
 ```{ .sh .terminal }
-$ kubectl version --client -o json | jq -r .clientVersion.gitVersion   # v1.31.2
+$ kubectl version --client -o json | jq -r '.clientVersion.gitVersion'   # v1.31.2
 $ helm version --short                                                 # v4.2.2+...
 $ argocd version --client --short                                      # v3.4.3+...
 $ jq --version                                                         # jq-1.7.1
@@ -84,7 +84,7 @@ $ curl -s -o /dev/null -w '%{http_code}\n' \
 $ curl -s "$NVIDIA_API_BASE/chat/completions" \
     -H "Authorization: Bearer $NVIDIA_API_KEY" -H "Content-Type: application/json" \
     -d '{"model":"meta/llama-3.1-8b-instruct","messages":[{"role":"user","content":"Reply with exactly: GATE2_OK"}],"max_tokens":16,"temperature":0}' \
-    | jq -r .choices[0].message.content
+    | jq -r '.choices[0].message.content'
 ```
 
 ```text title="Expected output"

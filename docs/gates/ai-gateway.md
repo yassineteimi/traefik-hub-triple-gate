@@ -51,11 +51,14 @@ A client calls the gateway with **no credentials of its own**:
 $ curl -s -X POST http://localhost/v1/chat/completions \
     -H 'Host: ai.localhost' -H 'Content-Type: application/json' \
     -d '{"messages":[{"role":"user","content":"Reply with exactly: AIGATE_OK"}]}' \
-    | jq -r .choices[0].message.content
+    | jq -r '.choices[0].message.content'
 ```
 ```text title="Expected output"
 AIGATE_OK
 ```
+
+!!! tip "zsh users: quote your jq filters"
+    On **zsh** (the macOS default), an unquoted `jq -r .choices[0].message.content` fails with `zsh: no matches found` — zsh treats `[0]` as a filename glob *before* jq runs. Wrap the filter in single quotes: `jq -r '.choices[0].message.content'`. (Bash doesn't do this, which is why the unquoted form is common online.)
 
 ## Layer 1 — Content Guard (deterministic regex PII)
 
@@ -113,7 +116,7 @@ $ # benign → 200
 $ curl -s -X POST http://localhost/v1/chat/completions -H 'Host: ai.localhost' \
     -H 'Content-Type: application/json' \
     -d '{"messages":[{"role":"user","content":"What is the capital of France?"}]}' \
-    | jq -r .choices[0].message.content
+    | jq -r '.choices[0].message.content'
 $ # harmful (no PII pattern) → 403, blocked by the safety model
 $ curl -s -o /dev/null -w '%{http_code}\n' -X POST http://localhost/v1/chat/completions \
     -H 'Host: ai.localhost' -H 'Content-Type: application/json' \
