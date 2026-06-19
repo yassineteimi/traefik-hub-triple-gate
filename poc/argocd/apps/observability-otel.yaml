@@ -51,12 +51,14 @@ spec:
           exporters:
             prometheus:
               endpoint: 0.0.0.0:8889
+            debug:
+              verbosity: basic
           service:
             pipelines:
               metrics:
                 receivers: [otlp]
                 processors: []
-                exporters: [prometheus]
+                exporters: [prometheus, debug]
               logs: null
               traces: null
   destination:
