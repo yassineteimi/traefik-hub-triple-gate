@@ -52,7 +52,7 @@ spec:
             prometheus:
               endpoint: 0.0.0.0:8889
             debug:
-              verbosity: basic
+              verbosity: detailed
           service:
             pipelines:
               metrics:
