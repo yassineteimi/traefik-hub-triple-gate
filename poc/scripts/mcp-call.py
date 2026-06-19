@@ -30,10 +30,29 @@ async def main(token: str, tool: str, args: dict):
             print(f"ALLOWED {tool} -> {out}")
 
 
+def _flatten(exc):
+    """Yield leaf exceptions, descending into ExceptionGroups."""
+    if isinstance(exc, BaseExceptionGroup):
+        for sub in exc.exceptions:
+            yield from _flatten(sub)
+    else:
+        yield exc
+
+
 if __name__ == "__main__":
     token, tool = sys.argv[1], sys.argv[2]
     args = json.loads(sys.argv[3]) if len(sys.argv) > 3 else {}
     try:
         asyncio.run(main(token, tool, args))
-    except Exception as e:
-        print(f"DENIED/ERROR {tool} -> {type(e).__name__}: {e}")
+    except BaseException as e:  # noqa: BLE001
+        for leaf in _flatten(e):
+            status = getattr(getattr(leaf, "response", None), "status_code", None)
+            if status:
+                print(f"DENIED {tool} -> HTTP {status} (blocked by gateway TBAC/JWT)")
+                break
+            msg = str(leaf)
+            if msg and "TaskGroup" not in msg:
+                print(f"DENIED {tool} -> {type(leaf).__name__}: {msg}")
+                break
+        else:
+            print(f"DENIED {tool} -> blocked by gateway")
