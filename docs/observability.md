@@ -53,16 +53,27 @@ Dashboard **Traefik Triple Gate** has request rate by route, **blocked-by-gate
 After running the [unified demo](unified-demo.md), the per-route counters show each
 gate doing its job — the same evidence, now as telemetry:
 
+Prometheus runs inside the cluster, so open a port-forward first (in a separate
+terminal — it keeps running), **then** query it:
+
 ```{ .sh .terminal }
-$ # via Prometheus: blocked requests by route + code
+$ ./poc/scripts/prometheus-ui.sh        # forwards http://localhost:9090 — leave running
+```
+
+```{ .sh .terminal }
+$ # in another terminal: blocked requests by route + code
 $ curl -sG http://localhost:9090/api/v1/query \
-    --data-urlencode 'query=sum by (router,code) (traefik_router_requests_total{code=~"401|403"})'
+    --data-urlencode 'query=sum by (router,code) (traefik_router_requests_total{code=~"401|403"})' \
+    | jq -r '.data.result[] | .metric.router + "  " + .metric.code + "  " + .value[1]'
 ```
-```text title="Observed"
-whoami-api       code=401  → 4    # Gate 1: anonymous/forged rejected
-ai-gateway       code=403  → 4    # Gate 2: Content Guard + LLM Guard blocks
-ecommerce-mcp    code=403  → 4    # Gate 3: TBAC tool denials
+```text title="Observed (after running the unified demo)"
+apps-whoami-api-…       401   6    # Gate 1: anonymous/forged rejected
+apps-ai-gateway-…       403   6    # Gate 2: Content Guard + LLM Guard blocks
+apps-ecommerce-mcp-…    403   6    # Gate 3: TBAC tool denials
 ```
+
+!!! warning "Empty result? Check the port-forward"
+    `curl http://localhost:9090/...` returning nothing almost always means **no port-forward is running** (connection refused) — Prometheus isn't exposed on the host by default. Run `prometheus-ui.sh` first. The same applies to Grafana (`grafana-ui.sh`, `:3000`).
 
 !!! info "Next increment (M5.2)"
     An **OpenTelemetry Collector** to surface `gen_ai.client.token.usage` (AI token
