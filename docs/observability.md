@@ -20,6 +20,7 @@ flowchart LR
 | `observability-prometheus` | prometheus 29.13.0 | Scrapes Traefik (`:9100`) + the collector |
 | `observability-grafana` | grafana 10.5.15 | Dashboards (Prometheus datasource) |
 | `observability-dashboards` | `poc/observability/` | The Triple Gate dashboard (ConfigMap) |
+| `observability-otel` | opentelemetry-collector 0.158.2 | Bridges Traefik OTLP (AI/MCP metrics) → Prometheus |
 
 Traefik itself is told to emit per-route labels and advertise a scrape target:
 
@@ -80,7 +81,65 @@ apps-ecommerce-mcp-…    403   6    # Gate 3: TBAC tool denials
 Traefik exposes request metrics on the Prometheus endpoint, but the **AI- and
 MCP-specific** metrics are emitted over **OTLP** only. An OpenTelemetry Collector
 receives them and re-exposes them to Prometheus. What arrives is richer than
-expected — it follows the OpenTelemetry **GenAI semantic conventions**:
+expected — it follows the OpenTelemetry **GenAI semantic conventions**.
+
+### Implementation
+
+**1 — Point Traefik's OTLP metrics exporter at the collector** (added to the same
+`traefik` Application values):
+
+```yaml title="poc/argocd/apps/traefik.yaml"
+metrics:
+  otlp:
+    enabled: true
+    http:
+      enabled: true
+      endpoint: http://otel-collector.observability.svc.cluster.local:4318/v1/metrics
+    addRoutersLabels: true
+    addServicesLabels: true
+```
+
+**2 — Run the collector** (`contrib` image — it has the `prometheus` exporter):
+OTLP in on `:4318`, Prometheus out on `:8889`, scraped via a pod annotation.
+
+```yaml title="poc/argocd/apps/observability-otel.yaml"
+config:
+  receivers:
+    otlp:
+      protocols:
+        http: { endpoint: 0.0.0.0:4318 }
+  exporters:
+    prometheus:
+      endpoint: 0.0.0.0:8889
+  service:
+    pipelines:
+      metrics: { receivers: [otlp], exporters: [prometheus] }
+```
+
+**3 — Verify delivery by querying Prometheus** (not the collector — see the warning
+below). Run some AI/MCP traffic, then:
+
+```{ .sh .terminal }
+$ ./poc/scripts/prometheus-ui.sh    # separate terminal
+$ curl -sG http://localhost:9090/api/v1/query \
+    --data-urlencode 'query=sum by (gen_ai_token_type) (gen_ai_client_token_usage_sum)' \
+    | jq -r '.data.result[] | .metric.gen_ai_token_type + " = " + .value[1]'
+```
+```text title="Observed"
+input = 942
+output = 167
+```
+
+!!! warning "Confirm OTLP delivery in Prometheus, not the collector"
+    During bring-up the collector's in-pod `:8889` endpoint can read as *empty*
+    even while data flows (a `busybox wget` quirk). The reliable check is querying
+    **Prometheus**. To prove the collector is *receiving*, add a `debug` exporter
+    (`verbosity: detailed`) to the metrics pipeline and watch its logs — that's how
+    this PoC confirmed Traefik was emitting all along — then remove it. Note the
+    collector pod must be **restarted** (`kubectl rollout restart`) to pick up a
+    config change.
+
+### Metrics emitted
 
 | Metric (Prometheus name) | What it gives us |
 | --- | --- |
