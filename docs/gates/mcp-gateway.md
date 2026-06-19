@@ -73,11 +73,17 @@ $ curl -s -o /dev/null -w '%{http_code}\n' -X POST http://mcp.localhost/ecommerc
 401
 ```
 
+The demo client needs the `mcp` SDK (Python 3.10+). The wrapper bootstraps a
+dedicated venv on first run, so just call it directly:
+
+!!! note "macOS: it's `python3`, not `python`"
+    macOS ships only `python3` (and its system one is 3.9, too old for `mcp`). The `mcp-call.sh` wrapper handles this — it creates a `.venv-mcp` with a suitable Python and the SDK, so you never invoke `python` yourself.
+
 **Support can read, but not write:**
 
 ```{ .sh .terminal }
-$ python poc/scripts/mcp-call.py "$SUPPORT" get_order '{"order_id":"88213"}'
-$ python poc/scripts/mcp-call.py "$SUPPORT" reorder  '{"sku":"SKU-BLU-42","qty":50}'
+$ ./poc/scripts/mcp-call.sh "$SUPPORT" get_order '{"order_id":"88213"}'
+$ ./poc/scripts/mcp-call.sh "$SUPPORT" reorder  '{"sku":"SKU-BLU-42","qty":50}'
 ```
 ```text title="Expected output"
 ALLOWED get_order -> {"status": "delayed", "reason": "driver called in sick", ...}
@@ -87,7 +93,7 @@ DENIED reorder -> HTTP 403 (blocked by gateway TBAC/JWT)
 **Ops can do both:**
 
 ```{ .sh .terminal }
-$ python poc/scripts/mcp-call.py "$OPS" reorder '{"sku":"SKU-BLU-42","qty":50}'
+$ ./poc/scripts/mcp-call.sh "$OPS" reorder '{"sku":"SKU-BLU-42","qty":50}'
 ```
 ```text title="Expected output"
 ALLOWED reorder -> {"ok": true, "sku": "SKU-BLU-42", "new_level": 50}
