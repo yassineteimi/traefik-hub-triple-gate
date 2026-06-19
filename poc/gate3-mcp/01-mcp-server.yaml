@@ -1,0 +1,37 @@
+# The e-commerce MCP server (Streamable HTTP on :8000, endpoint /mcp).
+# Image is built locally and loaded into kind (poc/scripts/build-mcp-image.sh),
+# so imagePullPolicy: IfNotPresent uses the on-node image (no registry needed).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-mcp
+  namespace: apps
+  labels: { app: ecommerce-mcp }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: ecommerce-mcp }
+  template:
+    metadata:
+      labels: { app: ecommerce-mcp }
+    spec:
+      containers:
+        - name: server
+          image: ecommerce-mcp:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          resources:
+            requests: { cpu: 20m, memory: 64Mi }
+            limits: { cpu: 200m, memory: 128Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecommerce-mcp
+  namespace: apps
+spec:
+  selector: { app: ecommerce-mcp }
+  ports:
+    - port: 8000
+      targetPort: 8000
