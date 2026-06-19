@@ -50,6 +50,15 @@ spec:
             addEntryPointsLabels: true
             addRoutersLabels: true
             addServicesLabels: true
+          # OTLP export for AI Gateway token usage + MCP tool-call metrics, sent to
+          # the OpenTelemetry Collector (which re-exposes them to Prometheus).
+          otlp:
+            enabled: true
+            http:
+              enabled: true
+              endpoint: http://otel-collector.observability.svc.cluster.local:4318/v1/metrics
+            addRoutersLabels: true
+            addServicesLabels: true
         deployment:
           podAnnotations:
             prometheus.io/scrape: "true"

@@ -1,0 +1,68 @@
+# OpenTelemetry Collector — receives OTLP metrics from Traefik (AI token usage,
+# MCP tool calls) and re-exposes them in Prometheus format on :8889, which
+# Prometheus scrapes via the annotation. Uses the contrib image (has the
+# `prometheus` exporter).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability-otel
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+    chart: opentelemetry-collector
+    targetRevision: 0.158.2   # collector v0.153.0
+    helm:
+      valuesObject:
+        fullnameOverride: otel-collector
+        mode: deployment
+        image:
+          repository: otel/opentelemetry-collector-contrib
+        command:
+          name: otelcol-contrib
+        resources:
+          requests: { cpu: 25m, memory: 96Mi }
+          limits: { cpu: 200m, memory: 192Mi }
+        podAnnotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "8889"
+          prometheus.io/path: /metrics
+        ports:
+          otlp-http:
+            enabled: true
+            containerPort: 4318
+            servicePort: 4318
+            protocol: TCP
+          prom-export:
+            enabled: true
+            containerPort: 8889
+            servicePort: 8889
+            protocol: TCP
+        presets:
+          logsCollection: { enabled: false }
+          kubernetesAttributes: { enabled: false }
+        config:
+          receivers:
+            otlp:
+              protocols:
+                http:
+                  endpoint: 0.0.0.0:4318
+          exporters:
+            prometheus:
+              endpoint: 0.0.0.0:8889
+          service:
+            pipelines:
+              metrics:
+                receivers: [otlp]
+                processors: []
+                exporters: [prometheus]
+              logs: null
+              traces: null
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions:
+      - CreateNamespace=true
