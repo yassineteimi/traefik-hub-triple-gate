@@ -1,0 +1,29 @@
+# MCP Gateway middleware — turns the route into an OAuth-protected MCP endpoint
+# and enforces Task-Based Access Control (TBAC).
+#
+# Policy model (token-driven, secure by default):
+#   1. Any non-tools/call method (initialize, notifications, tools/list, ...) is
+#      allowed for authenticated callers — needed for the MCP handshake/discovery.
+#   2. A tools/call is allowed only if the tool name is listed in the caller's
+#      JWT `allowed_tools` claim. So a "support" token (read-only tools) cannot
+#      invoke reorder/approve_return.
+#   3. Everything else is denied.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: ecommerce-mcp-gateway
+  namespace: apps
+spec:
+  plugin:
+    mcp:
+      resourceMetadata:
+        resource: http://mcp.localhost/ecommerce-mcp
+        authorizationServers:
+          - http://mcp.localhost/oauth/authorize
+        resourceDocumentation: https://yassineteimi.github.io/mcp-ecommerce-agent/
+      policies:
+        - match: NotEquals(`mcp.method`, `tools/call`)
+          action: allow
+        - match: Equals(`mcp.method`, `tools/call`) && Contains(`jwt.allowed_tools`, `${mcp.params.name}`)
+          action: allow
+      defaultAction: deny

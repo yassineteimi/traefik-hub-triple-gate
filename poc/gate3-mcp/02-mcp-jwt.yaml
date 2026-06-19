@@ -1,0 +1,15 @@
+# JWT authentication for the MCP Gateway. Reuses the same HS256 signing secret
+# as Gate 1 (apps/jwt). The token is consumed by the gateway only
+# (forwardAuthorization:false) — its claims drive TBAC.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: mcp-jwt
+  namespace: apps
+spec:
+  plugin:
+    jwt:
+      signingSecret: "urn:k8s:secret:jwt:signingSecret"
+      forwardAuthorization: false
+      forwardHeaders:
+        X-User-ID: sub

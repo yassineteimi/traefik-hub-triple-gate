@@ -1,0 +1,11 @@
+# Strip the gateway path prefix so the MCP server receives /mcp (not
+# /ecommerce-mcp/mcp).
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: ecommerce-mcp-stripprefix
+  namespace: apps
+spec:
+  stripPrefix:
+    prefixes:
+      - /ecommerce-mcp
