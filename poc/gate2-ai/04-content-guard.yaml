@@ -1,4 +1,4 @@
-# Content Guard — deterministic, regex-based PII/keyword blocking. Runs BEFORE
+# Content Guard - deterministic, regex-based PII/keyword blocking. Runs BEFORE
 # the chat-completion middleware, so a blocked prompt never reaches the LLM.
 # No external service (regex engine). clientRequestFormat:ccr auto-detects the
 # OpenAI chat message fields.

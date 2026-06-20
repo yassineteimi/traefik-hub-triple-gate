@@ -1,4 +1,4 @@
-# Gate 1 (API Gateway) — ArgoCD reconciles the sample API + JWT + rate limit
+# Gate 1 (API Gateway) - ArgoCD reconciles the sample API + JWT + rate limit
 # from poc/gate1-api/ in the repo. The signing Secret is injected out-of-band by
 # load-secrets.sh (never in Git), so it is not a tracked resource here.
 apiVersion: argoproj.io/v1alpha1

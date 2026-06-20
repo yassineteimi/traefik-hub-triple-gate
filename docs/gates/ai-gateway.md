@@ -1,4 +1,4 @@
-# Gate 2 — AI Gateway
+# Gate 2: AI Gateway
 
 The second gate governs **LLM traffic**. Clients send an ordinary OpenAI-style chat request to the gateway; the gateway injects the provider key, enforces a chain of guards, and only then forwards to the model. Every layer is declarative and reconciled by **ArgoCD**.
 
@@ -58,11 +58,11 @@ AIGATE_OK
 ```
 
 !!! tip "zsh users: quote your jq filters"
-    On **zsh** (the macOS default), an unquoted `jq -r .choices[0].message.content` fails with `zsh: no matches found` — zsh treats `[0]` as a filename glob *before* jq runs. Wrap the filter in single quotes: `jq -r '.choices[0].message.content'`. (Bash doesn't do this, which is why the unquoted form is common online.)
+    On **zsh** (the macOS default), an unquoted `jq -r .choices[0].message.content` fails with `zsh: no matches found`: zsh treats `[0]` as a filename glob *before* jq runs. Wrap the filter in single quotes: `jq -r '.choices[0].message.content'`. (Bash doesn't do this, which is why the unquoted form is common online.)
 
-## Layer 1 — Content Guard (deterministic regex PII)
+## Layer 1: Content Guard (deterministic regex PII)
 
-Runs **before** the LLM, blocking prompts that contain sensitive patterns — no external service, fully deterministic.
+Runs **before** the LLM, blocking prompts that contain sensitive patterns, no external service, fully deterministic.
 
 ```yaml title="poc/gate2-ai/04-content-guard.yaml" hl_lines="6 7 8 9 10 11"
 spec:
@@ -89,9 +89,9 @@ $ curl -s -o /dev/null -w '%{http_code}\n' -X POST http://localhost/v1/chat/comp
 403
 ```
 
-## Layer 2 — LLM Guard (semantic safety)
+## Layer 2: LLM Guard (semantic safety)
 
-What regex can't catch, a safety model can. The guard sends the conversation to NVIDIA's **`nemoguard-8b-content-safety`** NIM, which returns a `safe`/`unsafe` verdict; `Contains("unsafe")` blocks it. (Phase A showed the *reasoning* model returns prose, not a verdict — so we use this **classifier**.) The guard authenticates to the hosted endpoint via a `bearerAuth` secret key.
+What regex can't catch, a safety model can. The guard sends the conversation to NVIDIA's **`nemoguard-8b-content-safety`** NIM, which returns a `safe`/`unsafe` verdict; `Contains("unsafe")` blocks it. (Phase A showed the *reasoning* model returns prose, not a verdict, so we use this **classifier**.) The guard authenticates to the hosted endpoint via a `bearerAuth` secret key.
 
 ```yaml title="poc/gate2-ai/05-llm-guard.yaml" hl_lines="4 5 6 7 8 13 14 15"
 spec:
@@ -128,4 +128,4 @@ Paris.
 ```
 
 !!! info "Deferred to v2"
-    **Semantic cache** (serve repeated questions without an LLM call), **token rate-limit / quota** (cost governance), and **automatic provider failover** to a second LLM are planned for a v2 iteration — v1 ships the routing + both guards above. See the project backlog.
+    **Semantic cache** (serve repeated questions without an LLM call), **token rate-limit / quota** (cost governance), and **automatic provider failover** to a second LLM are planned for a v2 iteration; v1 ships the routing + both guards above. See the project backlog.

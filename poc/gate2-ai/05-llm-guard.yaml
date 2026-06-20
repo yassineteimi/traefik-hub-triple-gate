@@ -1,4 +1,4 @@
-# LLM Guard — semantic safety. Sends the conversation to NVIDIA's content-safety
+# LLM Guard - semantic safety. Sends the conversation to NVIDIA's content-safety
 # NIM (nemoguard-8b, validated in Phase A to return a 'safe'/'unsafe' verdict)
 # and blocks when the verdict Contains("unsafe"). Runs after the regex Content
 # Guard and before the LLM, so unsafe prompts never reach the model.

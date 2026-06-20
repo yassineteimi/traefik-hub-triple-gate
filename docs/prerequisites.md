@@ -1,6 +1,6 @@
 # Prerequisites
 
-This page is verified **live** on the homelab — every check below shows the command, the healthy output to expect, and how to fix it if missing. Reproduce it top to bottom and you'll have a working base for all three gates.
+This page is verified **live** on the homelab. Every check below shows the command, the healthy output to expect, and how to fix it if missing. Reproduce it top to bottom and you'll have a working base for all three gates.
 
 !!! info "Reference environment"
     macOS 26 on Apple Silicon (arm64), 12 cores / 36 GB RAM. Homebrew is the package manager. **No local GPU is required** for any default step.
@@ -26,9 +26,9 @@ This page is verified **live** on the homelab — every check below shows the co
     $ /opt/homebrew/opt/helm@3/bin/helm version --short
     ```
 
-### Container runtime — Colima + kind
+### Container runtime: Colima + kind
 
-We use **Colima** (free, open-source, Apple-Silicon-friendly) to provide a Docker-compatible daemon, and **kind** for the cluster. kind ships **no** ingress controller, so nothing competes with Traefik Hub — the cleanest base for this PoC. (If you prefer k3d, you must disable its bundled Traefik with `--k3s-arg "--disable=traefik@server:0"`.)
+We use **Colima** (free, open-source, Apple-Silicon-friendly) to provide a Docker-compatible daemon, and **kind** for the cluster. kind ships **no** ingress controller, so nothing competes with Traefik Hub, the cleanest base for this PoC. (If you prefer k3d, you must disable its bundled Traefik with `--k3s-arg "--disable=traefik@server:0"`.)
 
 ```{ .sh .terminal }
 $ brew install colima docker kind helm argocd
@@ -62,12 +62,12 @@ If `kubectl` or `jq` are missing: `$ brew install kubectl jq`.
 
 ## SaaS & external dependencies
 
-All tokens go in a gitignored `.env` (copy from `.env.example`). The checks below read from that file and **never print the secret** — they assert behaviour, not values.
+All tokens go in a gitignored `.env` (copy from `.env.example`). The checks below read from that file and **never print the secret**: they assert behaviour, not values.
 
 | Dependency | Purpose | Status |
 | --- | --- | --- |
 | **Traefik Hub trial token** | Register the gateway to the cluster (`helm upgrade`); needs **AI + MCP** entitlements | ✅ present · entitlement confirmed at gateway connect (M0) |
-| **NVIDIA hosted NIM** (`nvapi-` key) | LLM traffic **and** the safety guard — OpenAI-compatible, no GPU | ✅ verified (auth + inference) |
+| **NVIDIA hosted NIM** (`nvapi-` key) | LLM traffic **and** the safety guard, OpenAI-compatible, no GPU | ✅ verified (auth + inference) |
 | **Second LLM provider** (optional) | Failover demo | ⏳ deferred to M2 |
 | **MCP server** (`mcp-ecommerce-agent`) | Workload behind Gate 3 | ✅ located locally |
 
@@ -101,7 +101,7 @@ Traefik Hub's [LLM Guard](https://doc.traefik.io/traefik-hub/ai-gateway/middlewa
 | `nvidia/nemotron-content-safety-reasoning-4b` | Prose refusal ("I cannot and will not…") | ❌ no verdict token → false negative |
 | `nvidia/llama-3.1-nemoguard-8b-content-safety` | `{"User Safety": "unsafe", "Safety Categories": "…"}` | ✅ deterministic |
 
-**Decision:** use **`nvidia/llama-3.1-nemoguard-8b-content-safety`** for the guard — the same model in Traefik's [official NVIDIA NIMs guide](https://doc.traefik.io/traefik-hub/ai-gateway/guides/nvidia-nims-integration). The reasoning model is a *safety-aware chat model*, not a classifier. Recorded in `.env` as `NVIDIA_GUARD_MODEL`.
+**Decision:** use **`nvidia/llama-3.1-nemoguard-8b-content-safety`** for the guard, the same model in Traefik's [official NVIDIA NIMs guide](https://doc.traefik.io/traefik-hub/ai-gateway/guides/nvidia-nims-integration). The reasoning model is a *safety-aware chat model*, not a classifier. Recorded in `.env` as `NVIDIA_GUARD_MODEL`.
 
 !!! tip "Secrets hygiene"
     Tokens are injected as Kubernetes Secrets by scripts in `poc/scripts/`. Nothing secret is committed, and this published site contains zero secrets.

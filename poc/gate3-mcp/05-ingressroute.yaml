@@ -1,7 +1,7 @@
 # Route mcp.localhost/ecommerce-mcp/* -> the MCP server, guarded in order:
-#   1. mcp-jwt                    — authenticate (401 if no/invalid token)
-#   2. ecommerce-mcp-gateway      — MCP protocol + TBAC (deny disallowed tools)
-#   3. ecommerce-mcp-stripprefix  — rewrite path before forwarding
+#   1. mcp-jwt                    - authenticate (401 if no/invalid token)
+#   2. ecommerce-mcp-gateway      - MCP protocol + TBAC (deny disallowed tools)
+#   3. ecommerce-mcp-stripprefix  - rewrite path before forwarding
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:

@@ -1,5 +1,5 @@
 # Turns the route into an AI endpoint. The gateway injects the provider API key
-# (from Secret apps/nvidia-nim, key apiKey) and pins the model — clients never
+# (from Secret apps/nvidia-nim, key apiKey) and pins the model - clients never
 # see the key, and cannot override the model (governance).
 apiVersion: traefik.io/v1alpha1
 kind: Middleware

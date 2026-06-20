@@ -1,4 +1,4 @@
-site_name: Traefik Hub — Triple Gate PoC
+site_name: "Traefik Hub: Triple Gate PoC"
 
 nav:
   - Overview: index.md
@@ -6,17 +6,17 @@ nav:
   - Architecture: architecture.md
   - Bootstrap (M0): bootstrap.md
   - The Three Gates:
-    - Gate 1 — API Gateway: gates/api-gateway.md
-    - Gate 2 — AI Gateway: gates/ai-gateway.md
-    - Gate 3 — MCP Gateway: gates/mcp-gateway.md
+    - "Gate 1: API Gateway": gates/api-gateway.md
+    - "Gate 2: AI Gateway": gates/ai-gateway.md
+    - "Gate 3: MCP Gateway": gates/mcp-gateway.md
   - Unified Demo: unified-demo.md
   - Observability: observability.md
   - Evaluation Notes: evaluation.md
 
 site_author: Yassine TEIMI
 site_description: >-
-  A homelab benchmark of Traefik Hub's "Triple Gate" — API Gateway, AI Gateway,
-  and MCP Gateway — for cloud-native API and AI governance. GitOps-first with
+  A homelab benchmark of Traefik Hub's "Triple Gate": API Gateway, AI Gateway,
+  and MCP Gateway, for cloud-native API and AI governance. GitOps-first with
   ArgoCD on a local Kubernetes cluster: declarative auth, rate limiting, LLM
   content/safety guards, semantic caching, token quotas, and tool-level access
   control (TBAC) for Model Context Protocol servers.

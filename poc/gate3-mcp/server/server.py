@@ -4,10 +4,10 @@ Embodies the mcp-ecommerce-agent design: a few business tools over MCP, with a
 clear read-vs-write split so the MCP Gateway's TBAC can allow/deny per identity.
 
 Tools:
-  - get_order(order_id)      [read]   — order status
-  - list_inventory()        [read]   — stock levels
-  - reorder(sku, qty)       [write]  — restock (privileged)
-  - approve_return(rma_id)  [write]  — approve a return (privileged)
+  - get_order(order_id)      [read]   - order status
+  - list_inventory()        [read]   - stock levels
+  - reorder(sku, qty)       [write]  - restock (privileged)
+  - approve_return(rma_id)  [write]  - approve a return (privileged)
 """
 from mcp.server.fastmcp import FastMCP
 

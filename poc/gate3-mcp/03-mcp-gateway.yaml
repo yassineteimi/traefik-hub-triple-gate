@@ -1,9 +1,9 @@
-# MCP Gateway middleware — turns the route into an OAuth-protected MCP endpoint
+# MCP Gateway middleware - turns the route into an OAuth-protected MCP endpoint
 # and enforces Task-Based Access Control (TBAC).
 #
 # Policy model (token-driven, secure by default):
 #   1. Any non-tools/call method (initialize, notifications, tools/list, ...) is
-#      allowed for authenticated callers — needed for the MCP handshake/discovery.
+#      allowed for authenticated callers - needed for the MCP handshake/discovery.
 #   2. A tools/call is allowed only if the tool name is listed in the caller's
 #      JWT `allowed_tools` claim. So a "support" token (read-only tools) cannot
 #      invoke reorder/approve_return.
@@ -22,7 +22,7 @@ spec:
           - https://mcp.localhost/oauth/authorize
         resourceDocumentation: https://yassineteimi.github.io/mcp-ecommerce-agent/
       policies:
-        # MCP protocol handshake + discovery — allowed for any authenticated caller.
+        # MCP protocol handshake + discovery - allowed for any authenticated caller.
         - match: Equals(`mcp.method`, `initialize`)
           action: allow
         - match: Equals(`mcp.method`, `notifications/initialized`)
@@ -35,7 +35,7 @@ spec:
           action: allow
         - match: Equals(`mcp.method`, `prompts/list`)
           action: allow
-        # Tool calls — allowed only if the tool is in the caller's JWT allowed_tools.
+        # Tool calls - allowed only if the tool is in the caller's JWT allowed_tools.
         - match: Equals(`mcp.method`, `tools/call`) && Contains(`jwt.allowed_tools`, `${mcp.params.name}`)
           action: allow
       defaultAction: deny

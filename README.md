@@ -1,7 +1,7 @@
-<h1 align="center">Traefik Hub — Triple Gate PoC</h1>
+<h1 align="center">Traefik Hub: Triple Gate PoC</h1>
 
 <p align="center">
-  <b>API Gateway · AI Gateway · MCP Gateway</b> — defense-in-depth for cloud-native API & AI governance<br/>
+  <b>API Gateway · AI Gateway · MCP Gateway</b>: defense-in-depth for cloud-native API & AI governance<br/>
   GitOps-first on a local Kubernetes homelab · ArgoCD · declarative everything
 </p>
 
@@ -11,15 +11,15 @@
 
 ---
 
-A hands-on benchmark of **[Traefik Hub](https://doc.traefik.io/traefik-hub/)**'s "Triple Gate" — three enforcement points that govern API, LLM, and agent (MCP) traffic as **defense in depth**: an attack blocked at one gate is still caught by the next. Everything is reconciled declaratively by **ArgoCD**, and the whole thing runs on a single-node Kubernetes homelab with **no GPU required**.
+A hands-on benchmark of **[Traefik Hub](https://doc.traefik.io/traefik-hub/)**'s "Triple Gate", three enforcement points that govern API, LLM, and agent (MCP) traffic as **defense in depth**: an attack blocked at one gate is still caught by the next. Everything is reconciled declaratively by **ArgoCD**, and the whole thing runs on a single-node Kubernetes homelab with **no GPU required**.
 
 ## 🧭 The three gates
 
 | Gate | Enforces | Highlights |
 | --- | --- | --- |
-| **1 — API Gateway** | Identity & abuse control on a sample REST API | JWT/OAuth-style auth, rate limiting — all declarative, reconciled by ArgoCD |
-| **2 — AI Gateway** | Governance on LLM (chat-completion) traffic | Content Guard (regex PII/keyword block), LLM Guard (hosted NVIDIA safety model), semantic cache, token rate-limit/quota, multi-provider failover |
-| **3 — MCP Gateway** | Tool-level access control for MCP servers | JWT auth + TBAC — specific identities may call only specific tools; blocked vs allowed tool calls demonstrated |
+| **1: API Gateway** | Identity & abuse control on a sample REST API | JWT/OAuth-style auth, rate limiting, all declarative, reconciled by ArgoCD |
+| **2: AI Gateway** | Governance on LLM (chat-completion) traffic | Content Guard (regex PII/keyword block), LLM Guard (hosted NVIDIA safety model), semantic cache, token rate-limit/quota, multi-provider failover |
+| **3: MCP Gateway** | Tool-level access control for MCP servers | JWT auth + TBAC, specific identities may call only specific tools; blocked vs allowed tool calls demonstrated |
 
 Routed to **NVIDIA hosted NIMs** (OpenAI-compatible, free `nvapi-` key) for both LLM traffic and the safety guard.
 
@@ -28,7 +28,7 @@ Routed to **NVIDIA hosted NIMs** (OpenAI-compatible, free `nvapi-` key) for both
 ```text
 traefik-hub-triple-gate/
 ├── docs/        # 📖 the published GitHub Pages tutorial (MkDocs Material)
-└── poc/         # ⚙️ the runnable PoC — manifests, Helm values, ArgoCD apps, scripts
+└── poc/         # ⚙️ the runnable PoC: manifests, Helm values, ArgoCD apps, scripts
     ├── cluster/        # kind/k3d cluster config + bootstrap
     ├── argocd/         # ArgoCD install + app-of-apps
     ├── helm/           # Traefik Hub values (pinned)
@@ -52,7 +52,7 @@ cp .env.example .env          # add your Traefik Hub + NVIDIA tokens (gitignored
 
 ## 🔐 Secrets hygiene
 
-All tokens come from a **gitignored `.env`**, injected as Kubernetes Secrets by scripts — never committed. The published site contains zero secrets.
+All tokens come from a **gitignored `.env`**, injected as Kubernetes Secrets by scripts, never committed. The published site contains zero secrets.
 
 ## 🛠️ Stack
 

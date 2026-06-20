@@ -20,7 +20,7 @@ spec:
         kube-state-metrics: { enabled: false }
         server:
           retention: 6h
-          persistentVolume: { enabled: false }   # ephemeral — homelab
+          persistentVolume: { enabled: false }   # ephemeral - homelab
           resources:
             requests: { cpu: 50m, memory: 256Mi }
             limits: { cpu: 500m, memory: 512Mi }

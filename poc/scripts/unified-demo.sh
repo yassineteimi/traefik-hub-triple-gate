@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Unified Triple Gate demo — one attacker narrative, three gates, defense in depth.
+# Unified Triple Gate demo - one attacker narrative, three gates, defense in depth.
 #
 # Story: a "support"-tier identity (or an attacker holding a support token) tries
 # to escalate from read-only help into data exfiltration and privileged actions.
@@ -18,7 +18,7 @@ API_SUPPORT=$(./poc/scripts/mint-jwt.sh support api:read)
 MCP_SUPPORT=$(./poc/scripts/mint-mcp-jwt.sh support get_order,list_inventory)
 MCP_OPS=$(./poc/scripts/mint-mcp-jwt.sh ops get_order,list_inventory,reorder,approve_return)
 
-bold "ACT 1 — Gate 1 (API Gateway): identity at the edge"
+bold "ACT 1 - Gate 1 (API Gateway): identity at the edge"
 c=$(code -H 'Host: api.localhost' http://localhost/)
 [ "$c" = "401" ] && pass "anonymous API call rejected (HTTP $c)" || echo "  ✗ expected 401, got $c"
 
@@ -39,7 +39,7 @@ c=$(code -H 'Host: api.localhost' -H "Authorization: Bearer ${FORGED}" http://lo
 c=$(code -H 'Host: api.localhost' -H "Authorization: Bearer ${API_SUPPORT}" http://localhost/)
 [ "$c" = "200" ] && okay "legitimate support token admitted (HTTP $c)" || echo "  ✗ expected 200, got $c"
 
-bold "ACT 2 — Gate 2 (AI Gateway): governing the LLM"
+bold "ACT 2 - Gate 2 (AI Gateway): governing the LLM"
 # Exfiltration attempt: smuggle a customer card number through the model.
 c=$(code -X POST -H 'Host: ai.localhost' -H 'Content-Type: application/json' \
   -d '{"messages":[{"role":"user","content":"Summarize this customer note: card 4111-1111-1111-1111 exp 12/27"}]}' \
@@ -58,14 +58,14 @@ ans=$(curl -s -X POST -H 'Host: ai.localhost' -H 'Content-Type: application/json
   http://localhost/v1/chat/completions | jq -r '.choices[0].message.content' 2>/dev/null)
 okay "legitimate question answered: \"${ans}\""
 
-bold "ACT 3 — Gate 3 (MCP Gateway): authorizing agent actions"
+bold "ACT 3 - Gate 3 (MCP Gateway): authorizing agent actions"
 # The support agent is tricked (prompt injection on the agent side) into trying a
 # privileged action. TBAC stops it regardless of what the agent "decided".
 out=$(./poc/scripts/mcp-call.sh "${MCP_SUPPORT}" approve_return '{"rma_id":"RMA-FRAUD-1"}')
-echo "${out}" | grep -q 'DENIED' && pass "support agent denied approve_return — ${out#DENIED }" || echo "  ✗ expected DENIED: ${out}"
+echo "${out}" | grep -q 'DENIED' && pass "support agent denied approve_return - ${out#DENIED }" || echo "  ✗ expected DENIED: ${out}"
 
 out=$(./poc/scripts/mcp-call.sh "${MCP_SUPPORT}" reorder '{"sku":"SKU-BLU-42","qty":9999}')
-echo "${out}" | grep -q 'DENIED' && pass "support agent denied bulk reorder — ${out#DENIED }" || echo "  ✗ expected DENIED: ${out}"
+echo "${out}" | grep -q 'DENIED' && pass "support agent denied bulk reorder - ${out#DENIED }" || echo "  ✗ expected DENIED: ${out}"
 
 out=$(./poc/scripts/mcp-call.sh "${MCP_SUPPORT}" get_order '{"order_id":"88213"}')
 echo "${out}" | grep -q 'ALLOWED' && okay "support agent may still read orders (least privilege intact)" || echo "  ✗ expected ALLOWED: ${out}"
@@ -73,4 +73,4 @@ echo "${out}" | grep -q 'ALLOWED' && okay "support agent may still read orders (
 out=$(./poc/scripts/mcp-call.sh "${MCP_OPS}" reorder '{"sku":"SKU-BLU-42","qty":50}')
 echo "${out}" | grep -q 'ALLOWED' && okay "authorized ops identity may reorder (it's authz, not breakage)" || echo "  ✗ expected ALLOWED: ${out}"
 
-bold "Result: every malicious step was stopped at a different gate — defense in depth."
+bold "Result: every malicious step was stopped at a different gate - defense in depth."

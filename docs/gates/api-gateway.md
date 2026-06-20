@@ -1,6 +1,6 @@
-# Gate 1 — API Gateway
+# Gate 1: API Gateway
 
-The first gate enforces **who** may call an API and **how often**: JWT authentication plus rate limiting, on a sample API — all declarative and reconciled by **ArgoCD**. Nothing here is applied by hand; the gate *is* a set of YAML files in Git.
+The first gate enforces **who** may call an API and **how often**: JWT authentication plus rate limiting, on a sample API, all declarative and reconciled by **ArgoCD**. Nothing here is applied by hand; the gate *is* a set of YAML files in Git.
 
 ```mermaid
 flowchart LR
@@ -22,7 +22,7 @@ The `gate1-api` Application watches `poc/gate1-api/` and reconciles three object
 | `02-middlewares.yaml` | `Middleware` ×2 | `api-jwt` (auth) + `api-ratelimit` (throttle) |
 | `03-ingressroute.yaml` | `IngressRoute` | Routes `api.localhost` → whoami, applying both middlewares in order |
 
-The JWT **signing secret is never in Git** — `load-secrets.sh` injects it as `apps/jwt` from your `.env`, and the middleware references it by URN.
+The JWT **signing secret is never in Git**: `load-secrets.sh` injects it as `apps/jwt` from your `.env`, and the middleware references it by URN.
 
 ## The enforcement, declared
 
@@ -49,7 +49,7 @@ spec:
     burst: 5        # bucket of 5 → a quick burst trips 429
 ```
 
-The route applies them **in order** — auth first, then rate limit:
+The route applies them **in order**, auth first, then rate limit:
 
 ```yaml title="poc/gate1-api/03-ingressroute.yaml" hl_lines="11 12 13"
 apiVersion: traefik.io/v1alpha1
@@ -69,7 +69,7 @@ spec:
 
 ## Deploy it (GitOps)
 
-You don't `kubectl apply` the gate — you commit it and let ArgoCD reconcile. The root app-of-apps discovers the new Application automatically:
+You don't `kubectl apply` the gate; you commit it and let ArgoCD reconcile. The root app-of-apps discovers the new Application automatically:
 
 ```{ .sh .terminal }
 $ git add poc/gate1-api poc/argocd/apps/gate1-api.yaml && git commit -m "Gate 1" && git push
@@ -91,7 +91,7 @@ Mint a short-lived HS256 token signed with the same secret:
 $ TOKEN=$(./poc/scripts/mint-jwt.sh alice api:read)
 ```
 
-**1 — No token is rejected:**
+**1. No token is rejected:**
 
 ```{ .sh .terminal }
 $ curl -s -o /dev/null -w '%{http_code}\n' -H 'Host: api.localhost' http://localhost/
@@ -100,7 +100,7 @@ $ curl -s -o /dev/null -w '%{http_code}\n' -H 'Host: api.localhost' http://local
 401
 ```
 
-**2 — A valid token passes, and the gateway injects the caller's identity:**
+**2. A valid token passes, and the gateway injects the caller's identity:**
 
 ```{ .sh .terminal }
 $ curl -s -H 'Host: api.localhost' -H "Authorization: Bearer $TOKEN" http://localhost/ | grep X-User
@@ -110,7 +110,7 @@ X-User-Id: alice
 X-User-Scope: api:read
 ```
 
-**3 — A burst trips the rate limit:**
+**3. A burst trips the rate limit:**
 
 ```{ .sh .terminal }
 $ for i in $(seq 1 15); do
@@ -122,7 +122,7 @@ $ for i in $(seq 1 15); do
 200 200 200 200 200 429 200 429 429 429 429 429 200 429 429
 ```
 
-**4 — A forged token (wrong secret) is rejected — the gate validates the signature, not just presence:**
+**4. A forged token (wrong secret) is rejected, proving it validates the signature, not just presence:**
 
 ```{ .sh .terminal }
 $ curl -s -o /dev/null -w '%{http_code}\n' -H 'Host: api.localhost' \
@@ -133,4 +133,4 @@ $ curl -s -o /dev/null -w '%{http_code}\n' -H 'Host: api.localhost' \
 ```
 
 !!! success "Gate 1 in one line"
-    Identity is enforced at the edge (401 on missing/forged tokens), validated claims flow to the backend as headers, and abuse is throttled (429) — entirely as declarative config ArgoCD keeps in sync with Git.
+    Identity is enforced at the edge (401 on missing/forged tokens), validated claims flow to the backend as headers, and abuse is throttled (429), entirely as declarative config ArgoCD keeps in sync with Git.

@@ -1,4 +1,4 @@
-# Gate 2 (AI Gateway) — ArgoCD reconciles the AI route + guards from poc/gate2-ai/.
+# Gate 2 (AI Gateway) - ArgoCD reconciles the AI route + guards from poc/gate2-ai/.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

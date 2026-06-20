@@ -1,4 +1,4 @@
-# OpenTelemetry Collector — receives OTLP metrics from Traefik (AI token usage,
+# OpenTelemetry Collector - receives OTLP metrics from Traefik (AI token usage,
 # MCP tool calls) and re-exposes them in Prometheus format on :8889, which
 # Prometheus scrapes via the annotation. Uses the contrib image (has the
 # `prometheus` exporter).

@@ -1,4 +1,4 @@
-# PoC — runnable code
+# PoC - runnable code
 
 The runnable half of the project. GitHub Pages (`../docs/`) documents and presents; **this** is what executes on the homelab cluster. Everything is declarative and reconciled by ArgoCD wherever possible.
 

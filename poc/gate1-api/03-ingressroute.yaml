@@ -1,6 +1,6 @@
 # Route api.localhost -> whoami, guarded by Gate 1 middlewares (in order):
-#   1. api-jwt        — reject unauthenticated requests (401)
-#   2. api-ratelimit  — throttle authenticated floods (429)
+#   1. api-jwt        - reject unauthenticated requests (401)
+#   2. api-ratelimit  - throttle authenticated floods (429)
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:

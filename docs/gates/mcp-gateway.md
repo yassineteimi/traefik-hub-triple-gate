@@ -1,6 +1,6 @@
-# Gate 3 — MCP Gateway
+# Gate 3: MCP Gateway
 
-The third gate governs **AI agents**. An MCP (Model Context Protocol) server exposes business *tools*; the gateway puts JWT authentication and **Task-Based Access Control (TBAC)** in front of it, so a given identity can call only the tools it's entitled to — not just "can you reach the server", but "can you run *this* tool".
+The third gate governs **AI agents**. An MCP (Model Context Protocol) server exposes business *tools*; the gateway puts JWT authentication and **Task-Based Access Control (TBAC)** in front of it, so a given identity can call only the tools it's entitled to: not just "can you reach the server", but "can you run *this* tool".
 
 ```mermaid
 flowchart LR
@@ -13,7 +13,7 @@ flowchart LR
 
 ## The MCP server
 
-A small **FastMCP** server (Streamable HTTP) embodying the [mcp-ecommerce-agent](https://yassineteimi.github.io/mcp-ecommerce-agent/) design — read tools (`get_order`, `list_inventory`) and privileged write tools (`reorder`, `approve_return`). It's built locally and side-loaded into kind (no registry):
+A small **FastMCP** server (Streamable HTTP) embodying the [mcp-ecommerce-agent](https://yassineteimi.github.io/mcp-ecommerce-agent/) design: read tools (`get_order`, `list_inventory`) and privileged write tools (`reorder`, `approve_return`). It's built locally and side-loaded into kind (no registry):
 
 ```{ .sh .terminal }
 $ ./poc/scripts/build-mcp-image.sh   # docker build + kind load
@@ -51,7 +51,7 @@ spec:
 ```
 
 !!! note "Two findings worth recording"
-    `resourceMetadata` URLs **must be `https://`** (OAuth metadata validation), and the policy language supports `Equals` / `Contains` / `Lte` but **not `NotEquals`** — so the protocol methods are allow-listed explicitly.
+    `resourceMetadata` URLs **must be `https://`** (OAuth metadata validation), and the policy language supports `Equals` / `Contains` / `Lte` but **not `NotEquals`**, so the protocol methods are allow-listed explicitly.
 
 ## Demonstrate it
 
@@ -77,7 +77,7 @@ The demo client needs the `mcp` SDK (Python 3.10+). The wrapper bootstraps a
 dedicated venv on first run, so just call it directly:
 
 !!! note "macOS: it's `python3`, not `python`"
-    macOS ships only `python3` (and its system one is 3.9, too old for `mcp`). The `mcp-call.sh` wrapper handles this — it creates a `.venv-mcp` with a suitable Python and the SDK, so you never invoke `python` yourself.
+    macOS ships only `python3` (and its system one is 3.9, too old for `mcp`). The `mcp-call.sh` wrapper handles this: it creates a `.venv-mcp` with a suitable Python and the SDK, so you never invoke `python` yourself.
 
 **Support can read, but not write:**
 
@@ -100,4 +100,4 @@ ALLOWED reorder -> {"ok": true, "sku": "SKU-BLU-42", "new_level": 50}
 ```
 
 !!! success "Gate 3 in one line"
-    The same MCP server, the same network path — yet the gateway lets *support* read orders and blocks it from `reorder`, while *ops* may do both. Authorization is per-tool, per-identity, and entirely declarative.
+    The same MCP server, the same network path, yet the gateway lets *support* read orders and blocks it from `reorder`, while *ops* may do both. Authorization is per-tool, per-identity, and entirely declarative.

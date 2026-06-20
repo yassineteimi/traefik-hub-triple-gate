@@ -1,4 +1,4 @@
-# Gate 3 (MCP Gateway) — ArgoCD reconciles the MCP server + gateway from
+# Gate 3 (MCP Gateway) - ArgoCD reconciles the MCP server + gateway from
 # poc/gate3-mcp/ (top-level YAML only; the server/ build context is ignored as it
 # holds no manifests). The container image is side-loaded into kind separately.
 apiVersion: argoproj.io/v1alpha1

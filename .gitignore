@@ -26,3 +26,6 @@ poc/**/*.rendered.yaml
 *.swp
 .idea/
 .vscode/
+
+# MCP demo client venv
+.venv-mcp/

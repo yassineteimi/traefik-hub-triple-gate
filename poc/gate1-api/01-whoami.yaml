@@ -1,4 +1,4 @@
-# Sample API behind Gate 1 — traefik/whoami echoes request details, so we can
+# Sample API behind Gate 1 - traefik/whoami echoes request details, so we can
 # see the gateway-injected identity headers (X-User-*) after JWT validation.
 apiVersion: apps/v1
 kind: Deployment

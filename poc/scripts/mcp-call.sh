@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Wrapper for the MCP demo client. The client needs the `mcp` SDK (Python 3.10+),
-# which macOS's system python3 (3.9) lacks — so we keep a dedicated venv and
+# which macOS's system python3 (3.9) lacks - so we keep a dedicated venv and
 # bootstrap it on first run. Then: ./poc/scripts/mcp-call.sh <jwt> <tool> '<json>'
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

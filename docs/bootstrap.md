@@ -1,6 +1,6 @@
 # Bootstrap (M0)
 
-The foundation: a local Kubernetes cluster, **ArgoCD** for GitOps, and **Traefik Hub** installed as the product's real **OSS → Hub** expansion motion — performed here as a *git commit ArgoCD reconciles*. After this milestone, every gate is added declaratively and watched by ArgoCD.
+The foundation: a local Kubernetes cluster, **ArgoCD** for GitOps, and **Traefik Hub** installed as the product's real **OSS → Hub** expansion motion, performed here as a *git commit ArgoCD reconciles*. After this milestone, every gate is added declaratively and watched by ArgoCD.
 
 ```mermaid
 flowchart LR
@@ -10,7 +10,7 @@ flowchart LR
   Hub{{Traefik Hub SaaS}} <-->|token registers gateway| Cluster
 ```
 
-## M0.1 — Cluster
+## M0.1: Cluster
 
 A single-node **kind** cluster, with host ports 80/443/8000 mapped to NodePorts so Traefik is reachable from the browser. Creation is idempotent.
 
@@ -35,7 +35,7 @@ $ ./poc/scripts/load-secrets.sh
 ✅ secret apps/nvidia-nim set
 ```
 
-## M0.2 — ArgoCD
+## M0.2: ArgoCD
 
 Installed via the pinned Helm chart `argo/argo-cd` **9.5.21** (ArgoCD v3.4.3), in insecure mode for local port-forward access.
 
@@ -49,7 +49,7 @@ Open the UI (prints the admin password, then port-forwards to `http://localhost:
 $ ./poc/scripts/argocd-ui.sh
 ```
 
-## M0.3 — Traefik: OSS → Hub, the GitOps way
+## M0.3 Traefik: OSS to Hub, the GitOps way
 
 You chose **app-of-apps**, so a root Application watches `poc/argocd/apps/` and reconciles everything it finds there.
 
@@ -63,7 +63,7 @@ traefik            Synced        Healthy
 triple-gate-root   Synced        Healthy
 ```
 
-### Phase 1 — pure OSS
+### Phase 1: pure OSS
 
 The first `traefik` Application installs the **OSS** Traefik chart (`traefik/traefik` **41.0.0**, proxy v3.7.5) with **no** `hub.token`. It comes up as a plain ingress controller:
 
@@ -77,12 +77,12 @@ traefik-...   1/1   Running
 404
 ```
 
-A `404` here is healthy — Traefik is answering, it just has no routes yet. The image is `traefik:v3.7.5` (no Hub).
+A `404` here is healthy: Traefik is answering, it just has no routes yet. The image is `traefik:v3.7.5` (no Hub).
 
 !!! note "kind networking gotcha"
     In chart v41 the Service type lives at **`service.spec.type`** (default `LoadBalancer`). On kind a `LoadBalancer` stays `<pending>` forever, so we set `service.spec.type: NodePort`. Also note the **app-of-apps propagation order**: editing `apps/traefik.yaml` requires the *root* app to sync first (updating the child Application's values), then the child re-syncs the chart.
 
-### Phase 2 — the OSS → Hub upgrade
+### Phase 2: the OSS → Hub upgrade
 
 The expansion motion is a single edit: add the `hub` block to the same Application. The value of `hub.token` is the **name** of the Secret created by `load-secrets.sh`.
 
@@ -90,17 +90,17 @@ The expansion motion is a single edit: add the `hub` block to the same Applicati
 helm:
   valuesObject:
     hub:
-      token: traefik-hub-license   # Secret name (key 'token') — enables API Gateway
+      token: traefik-hub-license   # Secret name (key 'token'), enables API Gateway
       aigateway:
         enabled: true              # requires AI entitlement on the token
       mcpgateway:
         enabled: true              # requires MCP entitlement on the token
 ```
 
-Commit it, and ArgoCD reconciles the upgrade — Traefik redeploys as a **Hub gateway** and registers with Traefik Hub:
+Commit it, and ArgoCD reconciles the upgrade: Traefik redeploys as a **Hub gateway** and registers with Traefik Hub:
 
 ```{ .sh .terminal }
-$ git commit -am "OSS->Hub upgrade — add hub.token" && git push
+$ git commit -am "OSS->Hub upgrade, add hub.token" && git push
 $ kubectl -n traefik logs deploy/traefik | grep -i hub
 ```
 
