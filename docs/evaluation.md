@@ -5,7 +5,15 @@ through the lens that matters for my market: **French and European regulated
 institutions** — banks, insurers, public sector, health — and the stricter subset
 that runs **air-gapped or sovereignty-constrained** estates. The benchmark is not
 "does it work" (it does) but "would I put this in front of a regulated buyer, and
-where would IBM API Connect or WSO2 still win".
+how does it sit next to the alternatives".
+
+!!! abstract "Scope & method"
+    The transferable asset here is a **reproducible benchmark methodology** for
+    API/AI/MCP gateways — built hands-on against Traefik Hub, repeatable against any
+    gateway. The competitor notes below are a **factual landscape**, not a scoreboard:
+    each platform is credited for what it genuinely does well. Vendor claims move
+    fast in this space; everything here is **as of late 2025** and linked to a
+    source — verify before quoting.
 
 ## What impressed me
 
@@ -40,27 +48,52 @@ where would IBM API Connect or WSO2 still win".
 - **Trial/entitlement coupling.** AI and MCP gateways require license entitlements;
   fine for a PoC, but procurement and air-gap teams will want the offline licensing
   story in writing.
+- **Deployment model — not Kubernetes-only, but AI/MCP is K8s-first.** Traefik and
+  the Hub API Gateway run on [VMs, Docker, Swarm, and plain file config](https://doc.traefik.io/traefik-hub/api-gateway/setup/installation/docker)
+  too, which matters for customers who haven't adopted Kubernetes. But the
+  **AI Gateway and MCP Gateway features are clearly CRD-first** in the docs — for a
+  VM-only estate I'd verify their availability/parity outside Kubernetes rather than
+  assume it.
 
-## GitOps & operating model vs IBM API Connect and WSO2
+## The landscape: Traefik Hub · IBM API Connect · WSO2 · Gravitee
 
-Comparing against the two platforms I know hands-on:
+A fair, point-in-time read of four credible platforms — two of them **French-rooted**
+(Traefik, ex-Containous; and Gravitee, founded in Lille), which is itself relevant to
+a sovereignty conversation. I know API Connect and WSO2 hands-on; the Traefik column
+is this PoC; the Gravitee column is from public docs pending my own PoC.
 
-| Dimension | **Traefik Hub** | **IBM API Connect** | **WSO2 API Manager** |
-| --- | --- | --- | --- |
-| Config model | **Kubernetes CRDs**, GitOps-native | Mgmt UI + CLI; gateway = DataPower/Gateway; GitOps is bolted on | Publisher UI + APICTL; config-as-code possible, not idiomatic |
-| Footprint | Light (one proxy + agent) | Heavy (Mgmt, Portal, Analytics, Gateway/DataPower) | Medium-heavy (APIM, KM, optional analytics) |
-| AI / LLM gateway | **First-class** (guards, token cost, semantic cache) | Emerging | Emerging (AI gateway features maturing) |
-| MCP / agent authz | **First-class (TBAC)** | Not yet | Not yet |
-| Air-gap maturity | Newer; offline mode exists, **must be validated** | **Battle-tested** in regulated/air-gapped banks | Strong; OSS core deployable fully offline |
-| Regulated-bank pedigree | Emerging | **Deep** (incumbent in FR banks/insurers) | Established, esp. where OSS/sovereignty preferred |
+| Dimension | **Traefik Hub** | **IBM API Connect** | **WSO2 APIM** | **Gravitee** |
+| --- | --- | --- | --- | --- |
+| Model / origin | Open-core; French-founded | Commercial (DataPower) | Open-core + subscription + Choreo SaaS | Open-core; French-founded (Lille, 2014) |
+| Config & GitOps | **CRD-native, GitOps-first** | Mgmt UI/CLI; GitOps add-on | UI + APICTL; config-as-code possible | UI + APIs; K8s Gateway API + GitOps |
+| Footprint | **Light** (proxy + agent) | Heavy (Mgmt/Portal/Analytics/DataPower) | Medium-heavy | Medium |
+| AI / LLM gateway | First-class: Content + LLM guards, token cost, semantic cache | **GA 2025**: LLM governance, rate/cost, caching, analytics | Emerging | Agent platform: identity/access, guardrails maturing |
+| MCP / agent governance | **TBAC** in front of MCP servers (per-identity, per-tool) | MCP via **API→MCP** + ContextForge proxy/guardrails | Emerging | **MCP** (APIs→MCP), **A2A**, agent identity/access |
+| Event-native (Kafka/MQTT) | No (HTTP/gRPC) | Limited | Partial | **Yes — core differentiator** |
+| Beyond Kubernetes | VMs/Docker/Swarm/file (AI/MCP K8s-first) | VM/appliance/container | VM/container/hybrid | VM/container/hybrid/K8s |
+| Air-gap / sovereignty | Offline mode — **validate**; self-host models | **Battle-tested** in regulated banks | OSS core **fully offline-able** | On-prem/hybrid; French-rooted trust |
 
-**Read:** Traefik Hub is the **most modern operating model** of the three —
-CRD/GitOps-native, lightest, and years ahead on AI and agent governance. API
-Connect's advantage is **incumbency and air-gap pedigree** in exactly the French
-institutions I sell into; WSO2's advantage is a **fully open-source, offline-able
-core** that sovereignty teams trust. Traefik Hub wins on *where the puck is going*
-(AI/agents, GitOps); the incumbents win on *where it has to run today* (offline,
-certified, already approved).
+Sources: IBM [AI Gateway announcement](https://www.ibm.com/new/announcements/how-an-ai-gateway-provides-greater-control-and-visibility-into-ai-services) & [API Connect MCP docs](https://www.ibm.com/docs/en/api-connect/software/12.1.0?topic=tools-ai-gateway-mcp), [ContextForge](https://github.com/IBM/mcp-context-forge); WSO2 [Choreo/subscription model](https://wso2.com/library/blogs/choreo-for-api-management/); Gravitee [AI agent platform](https://www.gravitee.io/platform/ai-agent-management) & [origin](https://siliconcanals.com/gravitee-io-raises-29-7m/); Traefik [multi-provider install](https://doc.traefik.io/traefik-hub/api-gateway/setup/installation/docker).
+
+**Read:** all four are credible; the differences are about *emphasis*, and the field
+is moving monthly.
+
+- **Traefik Hub** has the **most GitOps/CRD-native operating model** and the most
+  opinionated, composable guard chain (deterministic PII → safety-model → per-tool
+  TBAC). Lightest footprint.
+- **IBM API Connect** is **not** behind on AI as I'd earlier implied — its AI Gateway
+  went GA in 2025 with LLM governance, cost controls and caching, and it has an MCP
+  story (turn APIs into MCP tools; ContextForge as an MCP/A2A proxy with guardrails).
+  Its enduring edge is **incumbency and air-gap pedigree** in French banks/insurers.
+- **WSO2** is the **open-core, offline-friendly** choice sovereignty teams trust, with
+  API + event coverage; AI gateway features are earlier.
+- **Gravitee** is, alongside Traefik, **closest to where the market is heading** —
+  **event-native** *and* leaning hard into **agent/MCP/A2A governance** — with a
+  **French origin** that plays well for sovereignty.
+
+The honest caveat: AI/agent feature sets across all four change fast, so a real
+head-to-head needs a **hands-on PoC per vendor** — which is exactly the method this
+project demonstrates.
 
 ## Positioning for the French / regulated market
 
@@ -112,12 +145,18 @@ survive an air-gapped review, and both are addressable:
 
 ## Bottom line
 
-Traefik Hub is the **strongest cloud-native operating model** of the gateways I
-work with, and **genuinely ahead on AI and agent (MCP) governance** — a lead that
-matters as agentic systems reach regulated production. For the **mainstream French
-cloud-native** segment (banks modernising on Kubernetes/OpenShift, GitOps already
-in place) I would propose it today. For **air-gapped / SecNumCloud** institutions I
-would propose it **conditionally** — contingent on validating offline mode and
-standing up self-hosted NIMs — and would keep API Connect in the conversation for
-the classic-API, already-certified estate. The most likely winning play is not
-either/or but **Traefik Hub as the AI/agent gateway alongside the incumbent**.
+Traefik Hub has one of the **cleanest cloud-native operating models** I've worked
+with — GitOps/CRD-native, light, with a composable guard chain and per-tool TBAC that
+is genuinely well-executed. It is **not uniquely ahead**, though: IBM API Connect now
+ships a GA AI gateway with an MCP story, and **Gravitee** matches the modern direction
+(event-native, agent/MCP/A2A) with a French origin of its own. The differentiator is
+fit, not a single winner.
+
+For the **mainstream French cloud-native** segment (banks modernising on
+Kubernetes/OpenShift with GitOps in place) Traefik Hub is an easy thing to propose
+today. For **air-gapped / SecNumCloud** institutions I'd propose it **conditionally** —
+contingent on validating offline mode and standing up self-hosted NIMs — and keep the
+incumbent (API Connect) in the conversation for the classic-API, already-certified
+estate. The most likely winning play is rarely rip-and-replace; it's **the right
+AI/agent-native gateway alongside what's already approved** — and which gateway that
+is deserves a hands-on PoC per vendor, not a datasheet comparison.
