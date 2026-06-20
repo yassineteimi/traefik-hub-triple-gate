@@ -1,0 +1,1091 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A homelab benchmark of Traefik Hub's "Triple Gate": API Gateway, AI Gateway, and MCP Gateway, for cloud-native API and AI governance. GitOps-first with ArgoCD on a local Kubernetes cluster: declarative auth, rate limiting, LLM content/safety guards, semantic caching, token quotas, and tool-level access control (TBAC) for Model Context Protocol servers.">
+      
+      
+        <meta name="author" content="Yassine TEIMI">
+      
+      
+      
+        <link rel="prev" href="../observability/">
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.49">
+    
+    
+      
+        <title>Evaluation Notes - Traefik Hub: Triple Gate PoC</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.6f8fc17f.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/terminal.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="lime">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#evaluation-notes" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Traefik Hub: Triple Gate PoC" class="md-header__button md-logo" aria-label="Traefik Hub: Triple Gate PoC" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Traefik Hub: Triple Gate PoC
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Evaluation Notes
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="lime"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6m0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4M7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/yassineteimi/traefik-hub-triple-gate" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    yassineteimi/traefik-hub-triple-gate
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../prerequisites/" class="md-tabs__link">
+        
+  
+    
+  
+  Prerequisites
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../architecture/" class="md-tabs__link">
+        
+  
+    
+  
+  Architecture
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../bootstrap/" class="md-tabs__link">
+        
+  
+    
+  
+  Bootstrap (M0)
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../gates/api-gateway/" class="md-tabs__link">
+          
+  
+  The Three Gates
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../unified-demo/" class="md-tabs__link">
+        
+  
+    
+  
+  Unified Demo
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../observability/" class="md-tabs__link">
+        
+  
+    
+  
+  Observability
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+    
+  
+  Evaluation Notes
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Traefik Hub: Triple Gate PoC" class="md-nav__button md-logo" aria-label="Traefik Hub: Triple Gate PoC" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Traefik Hub: Triple Gate PoC
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/yassineteimi/traefik-hub-triple-gate" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    yassineteimi/traefik-hub-triple-gate
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prerequisites/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prerequisites
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bootstrap/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bootstrap (M0)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    The Three Gates
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            The Three Gates
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gates/api-gateway/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gate 1: API Gateway
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gates/ai-gateway/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gate 2: AI Gateway
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gates/mcp-gateway/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gate 3: MCP Gateway
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unified-demo/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Unified Demo
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../observability/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Observability
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Evaluation Notes
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Evaluation Notes
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-impressed-me" class="md-nav__link">
+    <span class="md-ellipsis">
+      What impressed me
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-id-flag" class="md-nav__link">
+    <span class="md-ellipsis">
+      What I'd flag
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-landscape-traefik-hub-ibm-api-connect-wso2-gravitee" class="md-nav__link">
+    <span class="md-ellipsis">
+      The landscape: Traefik Hub · IBM API Connect · WSO2 · Gravitee
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#positioning-for-the-french-regulated-market" class="md-nav__link">
+    <span class="md-ellipsis">
+      Positioning for the French / regulated market
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Positioning for the French / regulated market">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sovereignty-air-gap-the-decisive-axis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sovereignty &amp; air-gap: the decisive axis
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regulatory-fit-why-a-french-ciso-should-care" class="md-nav__link">
+    <span class="md-ellipsis">
+      Regulatory fit (why a French CISO should care)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-i-would-pitch-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      How I would pitch it
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bottom-line" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bottom line
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="evaluation-notes">Evaluation Notes</h1>
+<p>A practitioner's assessment after building the Triple Gate end-to-end, written
+through the lens that matters for my market: <strong>French and European regulated
+institutions</strong> (banks, insurers, public sector, health), and the stricter subset
+that runs <strong>air-gapped or sovereignty-constrained</strong> estates. The benchmark is not
+"does it work" (it does) but "would I put this in front of a regulated buyer, and
+how does it sit next to the alternatives".</p>
+<div class="admonition abstract">
+<p class="admonition-title">Scope &amp; method</p>
+<p>The transferable asset here is a <strong>reproducible benchmark methodology</strong> for
+API/AI/MCP gateways, built hands-on against Traefik Hub, repeatable against any
+gateway. The competitor notes below are a <strong>factual landscape</strong>, not a scoreboard:
+each platform is credited for what it genuinely does well. Vendor claims move
+fast in this space; everything here is <strong>as of late 2025</strong> and linked to a
+source; verify before quoting.</p>
+</div>
+<h2 id="what-impressed-me">What impressed me</h2>
+<ul>
+<li><strong>CRD-native, GitOps-first by construction.</strong> Every gate in this PoC is a YAML
+  object reconciled by ArgoCD: auth, rate limits, AI guards, and <strong>tool-level
+  authorization</strong> are all the same declarative substrate. The OSS→Hub upgrade was
+  literally a git commit. For a regulated shop, that means <strong>change is auditable by
+  default</strong>: every policy change is a reviewed, signed, revertible commit, not a
+  click in a console.</li>
+<li><strong>One control plane for three problem classes.</strong> API auth, LLM governance
+  (PII/safety/cost), and MCP <strong>agent</strong> authorization sit behind one gateway with one
+  policy model. That consolidation is rare and strategically interesting as agentic
+  systems arrive.</li>
+<li><strong>Defense in depth that actually composes.</strong> A prompt-injection that subverts the
+  agent's reasoning is still stopped by TBAC at the tool boundary. "A compromised
+  agent is not a compromised system" is a message that lands with a CISO.</li>
+<li><strong>Standards-aligned telemetry.</strong> AI metrics follow the OpenTelemetry <strong>GenAI
+  semantic conventions</strong> (token usage, model, cost), so observability is portable,
+  not a proprietary lock-in.</li>
+</ul>
+<h2 id="what-id-flag">What I'd flag</h2>
+<ul>
+<li><strong>Observability needs assembly.</strong> Request metrics are on Prometheus, but the
+  AI/MCP metrics are <strong>OTLP-only</strong>: you must run a collector to land them in
+  Prometheus. Content Guard has no first-class counter (blocks only show as <code>403</code>),
+  and a denied MCP tool call doesn't populate <code>mcp_tool_name</code>. The signals are
+  excellent; the <strong>out-of-the-box dashboarding is not</strong>, so budget for it.</li>
+<li><strong>The SaaS control-plane dependency is the headline risk for my market</strong> (see
+  below). During the PoC the agent logged <code>Unable to ping platform api.traefik.io</code>, a reminder that the gateway data
+  plane is self-hosted but the <strong>control plane phones home</strong> by default.</li>
+<li><strong>Trial/entitlement coupling.</strong> AI and MCP gateways require license entitlements;
+  fine for a PoC, but procurement and air-gap teams will want the offline licensing
+  story in writing.</li>
+<li><strong>Deployment model: not Kubernetes-only, but AI/MCP is K8s-first.</strong> Traefik and
+  the Hub API Gateway run on <a href="https://doc.traefik.io/traefik-hub/api-gateway/setup/installation/docker">VMs, Docker, Swarm, and plain file config</a>
+  too, which matters for customers who haven't adopted Kubernetes. But the
+  <strong>AI Gateway and MCP Gateway features are clearly CRD-first</strong> in the docs. For a
+  VM-only estate I'd verify their availability/parity outside Kubernetes rather than
+  assume it.</li>
+</ul>
+<h2 id="the-landscape-traefik-hub-ibm-api-connect-wso2-gravitee">The landscape: Traefik Hub · IBM API Connect · WSO2 · Gravitee</h2>
+<p>A fair, point-in-time read of four credible platforms, two of them <strong>French-rooted</strong>
+(Traefik, ex-Containous; and Gravitee, founded in Lille), which is itself relevant to
+a sovereignty conversation. I know API Connect and WSO2 hands-on; the Traefik column
+is this PoC; the Gravitee column is from public docs pending my own PoC.</p>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th><strong>Traefik Hub</strong></th>
+<th><strong>IBM API Connect</strong></th>
+<th><strong>WSO2 APIM</strong></th>
+<th><strong>Gravitee</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model / origin</td>
+<td>Open-core; French-founded</td>
+<td>Commercial (DataPower)</td>
+<td>Open-core + subscription + Choreo SaaS</td>
+<td>Open-core; French-founded (Lille, 2014)</td>
+</tr>
+<tr>
+<td>Config &amp; GitOps</td>
+<td><strong>CRD-native, GitOps-first</strong></td>
+<td>Mgmt UI/CLI; GitOps add-on</td>
+<td>UI + APICTL; config-as-code possible</td>
+<td>UI + APIs; K8s Gateway API + GitOps</td>
+</tr>
+<tr>
+<td>Footprint</td>
+<td><strong>Light</strong> (proxy + agent)</td>
+<td>Heavy (Mgmt/Portal/Analytics/DataPower)</td>
+<td>Medium-heavy</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>AI / LLM gateway</td>
+<td>First-class: Content + LLM guards, token cost, semantic cache</td>
+<td><strong>GA 2025</strong>: LLM governance, rate/cost, caching, analytics</td>
+<td>Emerging</td>
+<td>Agent platform: identity/access, guardrails maturing</td>
+</tr>
+<tr>
+<td>MCP / agent governance</td>
+<td><strong>TBAC</strong> in front of MCP servers (per-identity, per-tool)</td>
+<td>MCP via <strong>API→MCP</strong> + ContextForge proxy/guardrails</td>
+<td>Emerging</td>
+<td><strong>MCP</strong> (APIs→MCP), <strong>A2A</strong>, agent identity/access</td>
+</tr>
+<tr>
+<td>Event-native (Kafka/MQTT)</td>
+<td>No (HTTP/gRPC)</td>
+<td>Limited</td>
+<td>Partial</td>
+<td><strong>Yes, core differentiator</strong></td>
+</tr>
+<tr>
+<td>Beyond Kubernetes</td>
+<td>VMs/Docker/Swarm/file (AI/MCP K8s-first)</td>
+<td>VM/appliance/container</td>
+<td>VM/container/hybrid</td>
+<td>VM/container/hybrid/K8s</td>
+</tr>
+<tr>
+<td>Air-gap / sovereignty</td>
+<td>Offline mode, <strong>validate</strong>; self-host models</td>
+<td><strong>Battle-tested</strong> in regulated banks</td>
+<td>OSS core <strong>fully offline-able</strong></td>
+<td>On-prem/hybrid; French-rooted trust</td>
+</tr>
+</tbody>
+</table>
+<p>Sources: IBM <a href="https://www.ibm.com/new/announcements/how-an-ai-gateway-provides-greater-control-and-visibility-into-ai-services">AI Gateway announcement</a> &amp; <a href="https://www.ibm.com/docs/en/api-connect/software/12.1.0?topic=tools-ai-gateway-mcp">API Connect MCP docs</a>, <a href="https://github.com/IBM/mcp-context-forge">ContextForge</a>; WSO2 <a href="https://wso2.com/library/blogs/choreo-for-api-management/">Choreo/subscription model</a>; Gravitee <a href="https://www.gravitee.io/platform/ai-agent-management">AI agent platform</a> &amp; <a href="https://siliconcanals.com/gravitee-io-raises-29-7m/">origin</a>; Traefik <a href="https://doc.traefik.io/traefik-hub/api-gateway/setup/installation/docker">multi-provider install</a>.</p>
+<p><strong>Read:</strong> all four are credible; the differences are about <em>emphasis</em>, and the field
+is moving monthly.</p>
+<ul>
+<li><strong>Traefik Hub</strong> has the <strong>most GitOps/CRD-native operating model</strong> and the most
+  opinionated, composable guard chain (deterministic PII → safety-model → per-tool
+  TBAC). Lightest footprint.</li>
+<li><strong>IBM API Connect</strong> ships a GA AI Gateway (2025) with LLM governance, cost
+  controls and caching, plus an MCP story (turn APIs into MCP tools; ContextForge as
+  an MCP/A2A proxy with guardrails). Its enduring edge is <strong>incumbency and air-gap
+  pedigree</strong> in French banks/insurers.</li>
+<li><strong>WSO2</strong> is the <strong>open-core, offline-friendly</strong> choice sovereignty teams trust, with
+  API + event coverage; AI gateway features are earlier.</li>
+<li><strong>Gravitee</strong> is, alongside Traefik, <strong>closest to where the market is heading</strong>:
+  <strong>event-native</strong> <em>and</em> leaning hard into <strong>agent/MCP/A2A governance</strong>, with a
+  <strong>French origin</strong> that plays well for sovereignty.</li>
+</ul>
+<p>The honest caveat: AI/agent feature sets across all four change fast, so a real
+head-to-head needs a <strong>hands-on PoC per vendor</strong>, which is exactly the method this
+project demonstrates.</p>
+<h2 id="positioning-for-the-french-regulated-market">Positioning for the French / regulated market</h2>
+<h3 id="sovereignty-air-gap-the-decisive-axis">Sovereignty &amp; air-gap: the decisive axis</h3>
+<p>French regulated buyers increasingly require <strong>on-prem or SecNumCloud-qualified
+(ANSSI)</strong> deployments, and the strictest (defense, some banking, sensitive public
+sector) require <strong>true air-gap</strong>. Two hard dependencies in <em>this</em> PoC would not
+survive an air-gapped review, and both are addressable:</p>
+<ol>
+<li><strong>Hub control-plane SaaS (<code>api.traefik.io</code>).</strong> The chart exposes a
+   <code>hub.offline</code> value ("disables all external network connections"). For a
+   sovereign deployment this is the <strong>single most important thing to validate</strong>:
+   does offline mode preserve API + AI + MCP gateway features, and how is licensing
+   handled without call-home? Get it in writing before proposing.</li>
+<li><strong>Hosted NVIDIA NIM endpoint.</strong> This PoC routes to <code>integrate.api.nvidia.com</code>
+   for convenience. An air-gapped variant <strong>self-hosts the models</strong>: NVIDIA NIM
+   containers (<code>nvcr.io/nim/...</code>) on on-prem GPUs (the same <code>nemoguard</code> guard model
+   Traefik's own guide self-hosts), with the AI Gateway pointed at in-cluster
+   Services. No architecture change; only the endpoints move inside the perimeter.</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">The air-gapped reference architecture</p>
+<p>Same three gates, but: Traefik Hub in <strong>offline mode</strong>, <strong>self-hosted NIMs</strong> on
+on-prem/OpenShift GPUs, models and images mirrored into an internal registry,
+and the LLM Guard / Content Guard pointed at in-cluster endpoints. The GitOps
+and TBAC story is <strong>identical</strong>, which is the point.</p>
+</div>
+<h3 id="regulatory-fit-why-a-french-ciso-should-care">Regulatory fit (why a French CISO should care)</h3>
+<ul>
+<li><strong>DORA</strong> (in force 2025): the gateway is a natural <strong>ICT control point</strong>: third-
+  party LLM risk, rate/quota for resilience, and an audit trail (every policy is a
+  git commit) map directly onto operational-resilience obligations.</li>
+<li><strong>EU AI Act:</strong> Content Guard + LLM Guard + per-tool authorization + token/guard
+  telemetry give a concrete, demonstrable <strong>governance posture</strong> for AI systems.</li>
+<li><strong>GDPR / data residency:</strong> deterministic <strong>PII blocking before the model</strong>, and
+  EU-region or on-prem inference, address data-minimisation and residency.</li>
+<li><strong>ANSSI / SecNumCloud, HDS (health):</strong> feasible <strong>only</strong> once the offline +
+  self-hosted-model architecture above is confirmed; that is the gating item.</li>
+</ul>
+<h3 id="how-i-would-pitch-it">How I would pitch it</h3>
+<blockquote>
+<p><em>"For your AI and agent traffic, Traefik Hub gives you a single, GitOps-native
+control point (auth, PII and safety guards, cost governance, and per-tool agent
+authorization) with an audit trail that is your git history. For a sovereign or
+air-gapped estate we run it offline with self-hosted NIMs on your OpenShift GPUs;
+the policy model doesn't change. Where you already run API Connect for classic
+APIs, this is the </em><em>AI/agent-native layer</em><em> in front of your LLMs and MCP servers,
+not a rip-and-replace."</em></p>
+</blockquote>
+<h2 id="bottom-line">Bottom line</h2>
+<p>Traefik Hub has one of the <strong>cleanest cloud-native operating models</strong> I've worked
+with: GitOps/CRD-native, light, with a composable guard chain and per-tool TBAC that
+is genuinely well-executed. It is <strong>not uniquely ahead</strong>, though: IBM API Connect now
+ships a GA AI gateway with an MCP story, and <strong>Gravitee</strong> matches the modern direction
+(event-native, agent/MCP/A2A) with a French origin of its own. The differentiator is
+fit, not a single winner.</p>
+<p>For the <strong>mainstream French cloud-native</strong> segment (banks modernising on
+Kubernetes/OpenShift with GitOps in place) Traefik Hub is an easy thing to propose
+today. For <strong>air-gapped / SecNumCloud</strong> institutions I'd propose it <strong>conditionally</strong>, contingent on validating offline mode and
+standing up self-hosted NIMs, and keep the incumbent (API Connect) in the conversation for the classic-API, already-certified
+estate. The most likely winning play is rarely rip-and-replace; it's <strong>the right
+AI/agent-native gateway alongside what's already approved</strong>, and which gateway that
+is deserves a hands-on PoC per vendor, not a datasheet comparison.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2026 <a href="https://github.com/yassineteimi" target="_blank" rel="noopener">Yassine TEIMI</a>
+
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/yassineteimi" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1M480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2m-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3m-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://linkedin.com/in/yassine-teimi" target="_blank" rel="noopener" title="linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3M135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5m282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "navigation.top", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotation", "content.code.copy"], "search": "../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.88dd0f4e.min.js"></script>
+      
+    
+  </body>
+</html>
